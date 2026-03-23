@@ -23,6 +23,53 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.post("/", async (req, res) => {
+  try {
+    const { itemName, currentStock, reorderThreshold } = req.body;
+
+    if (!itemName || !itemName.trim()) {
+      return res.status(400).json({
+        message: "Item name is required"
+      });
+    }
+
+    const stock = Number(currentStock);
+    const threshold = Number(reorderThreshold);
+
+    if (Number.isNaN(stock) || stock < 0) {
+      return res.status(400).json({
+        message: "Current stock must be a valid number >= 0"
+      });
+    }
+
+    if (Number.isNaN(threshold) || threshold < 1) {
+      return res.status(400).json({
+        message: "Reorder threshold must be a valid number >= 1"
+      });
+    }
+
+    const newItem = new Inventory({
+      itemName: itemName.trim(),
+      currentStock: stock,
+      reorderThreshold: threshold,
+      riskLevel: calculateRiskLevel(stock, threshold)
+    });
+
+    const savedItem = await newItem.save();
+
+    res.status(201).json({
+      message: "Inventory item added successfully",
+      item: savedItem
+    });
+  } catch (error) {
+    console.error("Add item error:", error);
+    res.status(400).json({
+      message: "Failed to add inventory item",
+      error: error.message
+    });
+  }
+});
+
 router.get("/logs", async (req, res) => {
   try {
     const logs = await UsageLog.find().sort({ createdAt: -1 });
