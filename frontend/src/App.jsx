@@ -16,7 +16,10 @@ function App() {
   const [newThreshold, setNewThreshold] = useState("");
   const [backendConnected, setBackendConnected] = useState(false);
 
-  const API_URL = "http://localhost:5000/api/inventory";
+  const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+const API_URL = `${API_BASE_URL}/inventory`;
 
   const showMessage = (text, type = "error") => {
     setMessage(text);
