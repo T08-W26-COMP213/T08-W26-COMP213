@@ -13,10 +13,12 @@ app.use(cors({
   origin: [
     "http://localhost:5173",
     "https://fanciful-dusk-c3a5b0.netlify.app",
+    "https://stock-guard1.netlify.app"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
+
 app.use(express.json());
 
 // Database connection
