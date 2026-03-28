@@ -7,6 +7,14 @@ function InventoryRiskLayout({ inventory = [], loading = false, backendConnected
   const atRiskItems = inventory.filter((item) => item.riskLevel === "Medium");
   const criticalItems = inventory.filter((item) => item.riskLevel === "High");
 
+  const riskChartData = [
+    { label: "Safe", count: safeItems.length, className: "safe" },
+    { label: "At Risk", count: atRiskItems.length, className: "at-risk" },
+    { label: "Critical", count: criticalItems.length, className: "critical" }
+  ];
+
+  const maxRiskCount = Math.max(...riskChartData.map((item) => item.count), 1);
+
   const renderItems = (items, emptyText) => {
     if (items.length === 0) {
       return <p className="risk-empty-text">{emptyText}</p>;
@@ -16,12 +24,12 @@ function InventoryRiskLayout({ inventory = [], loading = false, backendConnected
       <div className="risk-item-list">
         {items.map((item) => (
           <div key={item._id} className="risk-item">
-  <div className="risk-item-left">
-    {item.riskLevel === "High" && <span className="critical-icon">⚠️</span>}
-    <span className="risk-item-name">{item.itemName}</span>
-  </div>
-  <span className="risk-stock">Stock: {item.currentStock}</span>
-</div>
+            <div className="risk-item-left">
+              {item.riskLevel === "High" && <span className="critical-icon">⚠️</span>}
+              <span className="risk-item-name">{item.itemName}</span>
+            </div>
+            <span className="risk-stock">Stock: {item.currentStock}</span>
+          </div>
         ))}
       </div>
     );
@@ -48,6 +56,32 @@ function InventoryRiskLayout({ inventory = [], loading = false, backendConnected
             <option value="atRisk">At Risk Only</option>
             <option value="critical">Critical Only</option>
           </select>
+        </div>
+      )}
+
+      {backendConnected && !loading && inventory.length > 0 && (
+        <div className="risk-chart-panel">
+          <div className="risk-chart-header">
+            <h3>Risk Level Overview</h3>
+            <span className="risk-chart-subtitle">Simple Bar Chart</span>
+          </div>
+
+          <div className="risk-chart">
+            {riskChartData.map((item) => (
+              <div className="risk-chart-row" key={item.label}>
+                <div className="risk-chart-label">{item.label}</div>
+
+                <div className="risk-chart-track">
+                  <div
+                    className={`risk-chart-fill ${item.className}`}
+                    style={{ width: `${(item.count / maxRiskCount) * 100}%` }}
+                  ></div>
+                </div>
+
+                <div className="risk-chart-count">{item.count}</div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
