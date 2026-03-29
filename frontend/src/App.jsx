@@ -103,6 +103,16 @@ function App() {
     initializeApp();
   }, []);
 
+  useEffect(() => {
+    if (!message) return;
+
+    const timer = setTimeout(() => {
+      clearMessage();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [message]);
+
   const handleUsageSubmit = async (e) => {
     e.preventDefault();
     clearMessage();
@@ -143,6 +153,12 @@ function App() {
       const data = await response.json();
 
       if (!response.ok) {
+        alert(data.message || "Failed to update inventory usage.");
+        showMessage(data.message || "Failed to update inventory usage.", "error");
+        return;
+      }
+
+      showMessage(data.message || "Usage recorded successfully.", "success");
         alert(data.message || "Could not save this usage entry.");
         showMessage(data.message || "Could not save this usage entry.", "error");
         return;
@@ -257,6 +273,21 @@ function App() {
 
       <main className="dashboard-container">
         <section className="hero-panel">
+          <div>
+            <p className="hero-label">Smart Inventory Control</p>
+            <h2>Monitor stock usage, detect risk, and prevent shortages.</h2>
+            <p className="hero-text">
+              Track consumption in real time and identify inventory items that need attention
+              before they become critical.
+            </p>
+          </div>
+        </section>
+
+        {message && (
+          <div className={`status-message ${messageType}`}>
+            {message}
+          </div>
+        )}
   <div className="hero-content">
     <p className="hero-label">Smart Inventory Control</p>
 
@@ -609,7 +640,7 @@ function App() {
         <section className="table-panel">
           <div className="panel-header">
             <h2>Inventory Usage Log</h2>
-            <span className="panel-tag">Recent Activity</span>
+S            <span className="panel-tag">Recent Activity</span>
           </div>
 
           <div className="table-wrapper">
