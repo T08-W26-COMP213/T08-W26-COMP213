@@ -291,9 +291,11 @@ function App() {
         </section>
 
         <InventoryRiskLayout
-        inventory={inventory}
-        loading={loading}
-        backendConnected={backendConnected}/>
+  inventory={inventory}
+  loading={loading}
+  backendConnected={backendConnected}
+  fetchInventory={fetchInventory}
+/>
 
         <section className="panel glass-panel classification-panel">
             <div className="panel-header">
