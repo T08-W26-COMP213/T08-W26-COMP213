@@ -1,3 +1,4 @@
+import AddUserForm from "./AddUserForm.jsx";
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import InventoryRiskLayout from "./InventoryRiskLayout";
@@ -292,7 +293,7 @@ function App() {
         </section>
 
         <InventoryRiskLayout/>
-
+<AddUserForm /> 
         <InventoryDashboardLayout
         
         inventory={inventory}
