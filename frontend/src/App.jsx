@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import InventoryRiskLayout from "./InventoryRiskLayout";
 import InventoryDashboardLayout from "./InventoryDashboardLayout";
+import UserAccountManagementLayout from "./UserAccountManagementLayout";
 
 function App() {
   const [inventory, setInventory] = useState([]);
@@ -293,7 +294,9 @@ function App() {
 
         <InventoryRiskLayout/>
 
-        <InventoryDashboardLayout
+        <InventoryDashboardLayout/>
+
+        <UserAccountManagementLayout
 
         inventory={inventory}
         loading={loading}
