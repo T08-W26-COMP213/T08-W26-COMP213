@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
+import InventoryRiskLayout from "./InventoryRiskLayout";
+import InventoryDashboardLayout from "./InventoryDashboardLayout";
 
 function App() {
   const [inventory, setInventory] = useState([]);
@@ -29,6 +31,18 @@ function App() {
   const clearMessage = () => {
     setMessage("");
     setMessageType("");
+  };
+
+  const getRiskDisplayName = (riskLevel) => {
+    if (riskLevel === "High") return "Critical";
+    if (riskLevel === "Medium") return "At Risk";
+    return "Safe";
+  };
+
+  const getRiskDisplayClass = (riskLevel) => {
+    if (riskLevel === "High") return "high";
+    if (riskLevel === "Medium") return "medium";
+    return "low";
   };
 
   const fetchInventory = async () => {
@@ -73,7 +87,7 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/health");
+        const res = await fetch(`${API_BASE_URL}/api/health`);
         setBackendConnected(res.ok);
       } catch (error) {
         setBackendConnected(false);
@@ -121,20 +135,20 @@ function App() {
     const usedQty = Number(quantityUsed);
 
     if (!selectedItemId) {
-      alert("Please select an item.");
-      showMessage("Please select an item.", "error");
+      alert("Please choose an item before submitting.");
+      showMessage("Please choose an item before submitting.", "error");
       return;
     }
 
     if (!usageDate || !String(usageDate).trim()) {
-      alert("Please select a usage date.");
-      showMessage("Please select a usage date.", "error");
+      alert("Please choose the date of use.");
+      showMessage("Please choose the date of use.", "error");
       return;
     }
 
     if (quantityUsed === "" || Number.isNaN(usedQty) || usedQty <= 0) {
-      alert("Please enter a valid usage quantity greater than 0.");
-      showMessage("Please enter a valid usage quantity greater than 0.", "error");
+      alert("Please enter a quantity greater than 0.");
+      showMessage("Please enter a quantity greater than 0.", "error");
       return;
     }
 
@@ -160,13 +174,19 @@ function App() {
       }
 
       showMessage(data.message || "Usage recorded successfully.", "success");
+        alert(data.message || "Could not save this usage entry.");
+        showMessage(data.message || "Could not save this usage entry.", "error");
+        return;
+      }
+
+      showMessage("Usage recorded successfully", "success");
       setQuantityUsed("");
       setUsageDate(new Date().toISOString().split("T")[0]);
 
       await Promise.all([fetchInventory(), fetchUsageLogs()]);
     } catch (error) {
-      alert("Server error while updating usage.");
-      showMessage("Server error while updating usage.", "error");
+      alert("Something went wrong while saving the usage entry.");
+      showMessage("Something went wrong while saving the usage entry.", "error");
     }
   };
 
@@ -260,6 +280,14 @@ function App() {
     return inventory.filter((item) => item.riskLevel === "High");
   }, [inventory]);
 
+  const itemsByRiskLevel = useMemo(() => {
+    return {
+      High: inventory.filter((item) => item.riskLevel === "High"),
+      Medium: inventory.filter((item) => item.riskLevel === "Medium"),
+      Low: inventory.filter((item) => item.riskLevel === "Low")
+    };
+  }, [inventory]);
+
   const totalItems = inventory.length;
 
   const totalUnitsRemaining = useMemo(() => {
@@ -311,6 +339,104 @@ function App() {
           </div>
         </section>
 
+        <InventoryRiskLayout/>
+
+        <InventoryDashboardLayout
+
+        inventory={inventory}
+        loading={loading}
+        backendConnected={backendConnected}/>
+
+        <section className="panel glass-panel classification-panel">
+            <div className="panel-header">
+              <h2>Items by Risk Category</h2>
+              <span className="panel-tag">Classification</span>
+            </div>
+            
+
+            <div className="category-container">
+              <div className="risk-category">
+                <h3 className="category-title high-risk-title">
+                  🔴 High Risk Items ({itemsByRiskLevel.High.length})
+                </h3>
+                {itemsByRiskLevel.High.length === 0 ? (
+                  <p className="empty-category">No high risk items</p>
+                ) : (
+                  <div className="items-list">
+                    {itemsByRiskLevel.High.map((item) => (
+                      <div className="category-item high-risk-item" key={item._id}>
+                        <div className="item-info">
+                  <h4 className="high-risk-item-title">
+  <span className="critical-icon">⚠️</span>
+  <span>{item.itemName}</span>
+</h4>
+                          <p>
+                            Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                            <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                            <strong>{item.totalUsed}</strong>
+                          </p>
+                        </div>
+                        <span className="category-label high-label">High</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="risk-category">
+                <h3 className="category-title medium-risk-title">
+                  🟡 Medium Risk Items ({itemsByRiskLevel.Medium.length})
+                </h3>
+                {itemsByRiskLevel.Medium.length === 0 ? (
+                  <p className="empty-category">No medium risk items</p>
+                ) : (
+                  <div className="items-list">
+                    {itemsByRiskLevel.Medium.map((item) => (
+                      <div className="category-item medium-risk-item" key={item._id}>
+                        <div className="item-info">
+                          <h4>{item.itemName}</h4>
+                          <p>
+                            Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                            <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                            <strong>{item.totalUsed}</strong>
+                          </p>
+                        </div>
+                        <span className="category-label medium-label">Medium</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="risk-category">
+                <h3 className="category-title low-risk-title">
+                  🟢 Low Risk Items ({itemsByRiskLevel.Low.length})
+                </h3>
+                {itemsByRiskLevel.Low.length === 0 ? (
+                  <p className="empty-category">No low risk items</p>
+                ) : (
+                  <div className="items-list">
+                    {itemsByRiskLevel.Low.map((item) => (
+                      <div className="category-item low-risk-item" key={item._id}>
+                        <div className="item-info">
+                          <h4>{item.itemName}</h4>
+                          <p>
+                            Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                            <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                            <strong>{item.totalUsed}</strong>
+                          </p>
+                        </div>
+                        <span className="category-label low-label">Low</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          
+        </section>
+        
+
         <section className="content-grid">
           <div className="panel glass-panel">
             <div className="panel-header">
@@ -322,27 +448,27 @@ function App() {
               <label>
                 Item Name
                 <input
-                  type="text"
-                  value={newItemName}
-                  onChange={(e) => {
-                    setNewItemName(e.target.value);
-                    if (messageType === "error") {
-                      clearMessage();
-                    }
-                  }}
-                  onBlur={() => {
-                    if (!newItemName.trim()) {
-                      alert("Please enter an item name.");
-                      showMessage("Please enter an item name.", "error");
-                    }
-                  }}
-                  placeholder="Enter item name"
+                type="text"
+                value={newItemName}
+                onChange={(e) => {
+                  setNewItemName(e.target.value);
+                  if (messageType === "error") {
+                    clearMessage();
+                  }
+                }}
+                onBlur={() => {
+                  if (!newItemName.trim()) {
+                    alert("Please enter an item name.");
+                    showMessage("Please enter an item name.", "error");
+                  }
+                }}
+                placeholder="Enter item name"
                 />
-              </label>
-
-              <label>
-                Current Stock
-                <input
+                </label>
+                
+                <label>
+                  Current Stock
+                  <input
                   type="number"
                   min="0"
                   value={newStock}
@@ -411,6 +537,10 @@ function App() {
 
               <button type="submit">Submit Usage</button>
             </form>
+
+            {message && <div className={`status-message ${messageType}`}>{message}</div>}
+
+            (feat: add success message styling and dashboard layout)
           </div>
         </section>
 
@@ -438,9 +568,15 @@ function App() {
                       <p>
                         Reorder Threshold: <strong>{item.reorderThreshold}</strong>
                       </p>
+                      <p>
+                        Status:{" "}
+                        <strong>
+                          {item.currentStock <= item.reorderThreshold ? "Alert Triggered" : "Normal"}
+                        </strong>
+                      </p>
                     </div>
-                    <span className={`risk-badge ${item.riskLevel.toLowerCase()}`}>
-                      {item.riskLevel}
+                    <span className={`risk-badge ${getRiskDisplayClass(item.riskLevel)}`}>
+                      {getRiskDisplayName(item.riskLevel)}
                     </span>
                   </div>
                 ))}
@@ -474,7 +610,7 @@ function App() {
         <section className="table-panel">
           <div className="panel-header">
             <h2>Inventory Overview</h2>
-            <span className="panel-tag">System Summary</span>
+            <span className="panel-tag">Real-Time Snapshot</span>
           </div>
 
           <div className="table-wrapper">
@@ -502,8 +638,8 @@ function App() {
                       <td>{item.reorderThreshold}</td>
                       <td>{item.totalUsed}</td>
                       <td>
-                        <span className={`risk-badge ${item.riskLevel.toLowerCase()}`}>
-                          {item.riskLevel}
+                        <span className={`risk-badge ${getRiskDisplayClass(item.riskLevel)}`}>
+                          {getRiskDisplayName(item.riskLevel)}
                         </span>
                       </td>
                       <td>
@@ -522,7 +658,7 @@ function App() {
         <section className="table-panel">
           <div className="panel-header">
             <h2>Inventory Usage Log</h2>
-            <span className="panel-tag">Submission History</span>
+S            <span className="panel-tag">Recent Activity</span>
           </div>
 
           <div className="table-wrapper">
@@ -531,26 +667,24 @@ function App() {
                 <tr>
                   <th>Item Name</th>
                   <th>Quantity Used</th>
-                  <th>Date</th>
-                  <th>Remaining Stock</th>
-                  <th>Risk Level</th>
+                  <th>Usage Date</th>
+                  <th>Updated Risk Level</th>
                 </tr>
               </thead>
               <tbody>
                 {usageLogs.length === 0 ? (
                   <tr>
-                    <td colSpan="5">No usage records submitted yet.</td>
+                    <td colSpan="4">No usage logs found.</td>
                   </tr>
                 ) : (
                   usageLogs.map((log) => (
                     <tr key={log._id}>
                       <td>{log.itemName}</td>
                       <td>{log.quantityUsed}</td>
-                      <td>{log.usageDate || "N/A"}</td>
-                      <td>{log.remainingStock}</td>
+                      <td>{new Date(log.usageDate).toLocaleDateString()}</td>
                       <td>
-                        <span className={`risk-badge ${log.riskLevel.toLowerCase()}`}>
-                          {log.riskLevel}
+                        <span className={`risk-badge ${getRiskDisplayClass(log.riskLevel)}`}>
+                          {getRiskDisplayName(log.riskLevel)}
                         </span>
                       </td>
                     </tr>
