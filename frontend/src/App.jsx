@@ -4,6 +4,7 @@ import "./App.css";
 import InventoryRiskLayout from "./InventoryRiskLayout";
 import ConfirmationBanner from "./ConfirmationBanner";
 import InventoryDashboardLayout from "./InventoryDashboardLayout";
+import UserAccountManagementLayout from "./UserAccountManagementLayout";
 
 function App() {
   const [inventory, setInventory] = useState([]);
@@ -364,15 +365,10 @@ function App() {
           </div>
         </section>
 
-        <InventoryRiskLayout
-  inventory={inventory}
-  loading={loading}
-  backendConnected={backendConnected}
-  fetchInventory={fetchInventory}
-/>
-<AddUserForm /> 
+        <InventoryRiskLayout/>
+
         <InventoryDashboardLayout
-        
+
         inventory={inventory}
         loading={loading}
         backendConnected={backendConnected}/>
