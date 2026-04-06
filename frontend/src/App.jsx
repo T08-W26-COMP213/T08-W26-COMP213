@@ -5,6 +5,7 @@ import ConfirmationBanner from "./ConfirmationBanner";
 import InventoryDashboardLayout from "./InventoryDashboardLayout";
 import AddUserForm from "./AddUserForm.jsx";
 import UserAccountManagementLayout from "./UserAccountManagementLayout";
+import ReportDashboard from "./ReportDashboard";
 
 function App() {
   const [inventory, setInventory] = useState([]);
@@ -762,7 +763,10 @@ const clearMessage = () => {
                     <td colSpan="4">No usage logs found.</td>
                   </tr>
                 ) : (
-                  usageLogs.map((log) => (
+                usageLogs
+  .sort((a, b) => new Date(b.usageDate) - new Date(a.usageDate)) // newest first
+  .slice(0, 20)
+  .map((log) => (
                     <tr key={log._id}>
                       <td>{log.itemName}</td>
                       <td>{log.quantityUsed}</td>
@@ -779,6 +783,14 @@ const clearMessage = () => {
             </table>
           </div>
         </section>
+        <section className="panel glass-panel" style={{ marginTop: "32px" }}>
+  <div className="panel-header">
+    <h2>Reports & Analytics</h2>
+    <span className="panel-tag">Summary</span>
+  </div>
+
+  <ReportDashboard />
+</section>
       </main>
     </div>
   );
