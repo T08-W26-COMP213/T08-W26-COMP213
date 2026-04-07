@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
+import ConfirmationBanner from "./ConfirmationBanner";
 
 function App() {
   const [inventory, setInventory] = useState([]);
@@ -443,14 +444,15 @@ function App() {
 
               <button type="submit">Submit Usage</button>
             </form>
-
-            {message && (
-              <div className={`status-message ${messageType}`}>
-                {message}
-              </div>
-            )}
           </div>
         </section>
+
+        <ConfirmationBanner 
+          message={message} 
+          type={messageType} 
+          onClose={clearMessage}
+          autoCloseDuration={messageType === "success" ? 4000 : 5000}
+        />
 
         <section className="content-grid">
           <div className="panel glass-panel">
