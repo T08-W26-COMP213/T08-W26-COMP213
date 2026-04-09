@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import "./App.css";
 import InventoryRiskLayout from "./InventoryRiskLayout";
 import InventoryDashboardLayout from "./InventoryDashboardLayout";
-
+import ExportReport from "./ExportReport";
 function App() {
   const API_BASE_URL = "http://localhost:5000";
   const API_URL = `${API_BASE_URL}/api/inventory`;
@@ -18,13 +18,29 @@ function App() {
   })();
 
   const [inventory, setInventory] = useState([]);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  fetch("http://localhost:5000/api/inventory")
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("App inventory:", data);
+      setInventory(data);
+      setLoading(false);
+    })
+    .catch((err) => {
+      console.error("Fetch error:", err);
+      setLoading(false);
+    });
+}, []);
+  
   const [selectedItemId, setSelectedItemId] = useState("");
   const [quantityUsed, setQuantityUsed] = useState("");
   const [usageDate, setUsageDate] = useState(new Date().toISOString().split("T")[0]);
   const [usageLogs, setUsageLogs] = useState([]);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
-  const [loading, setLoading] = useState(true);
+
 
   const [newItemName, setNewItemName] = useState("");
   const [newStock, setNewStock] = useState("");
@@ -421,12 +437,14 @@ function App() {
         </section>
 
         <InventoryRiskLayout />
-
+<ExportReport inventory={inventory} />
         <InventoryDashboardLayout
-          inventory={inventory}
-          loading={loading}
-          backendConnected={backendConnected}
-        />
+  inventory={inventory}
+  loading={loading}
+  backendConnected={backendConnected}
+/>
+
+
 
         <section className="panel glass-panel classification-panel">
           <div className="panel-header">
