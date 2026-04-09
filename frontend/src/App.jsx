@@ -4,6 +4,9 @@ import InventoryRiskLayout from "./InventoryRiskLayout";
 import InventoryDashboardLayout from "./InventoryDashboardLayout";
 
 function App() {
+  const API_BASE_URL = "http://localhost:5000";
+  const API_URL = `${API_BASE_URL}/api/inventory`;
+
   const [inventory, setInventory] = useState([]);
   const [selectedItemId, setSelectedItemId] = useState("");
   const [quantityUsed, setQuantityUsed] = useState("");
@@ -20,8 +23,6 @@ function App() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingItemId, setEditingItemId] = useState("");
-
-  const API_URL = "http://localhost:5000/api/inventory";
 
   const showMessage = (text, type = "error") => {
     setMessage(text);
@@ -174,12 +175,6 @@ function App() {
       }
 
       showMessage(data.message || "Usage recorded successfully.", "success");
-        alert(data.message || "Could not save this usage entry.");
-        showMessage(data.message || "Could not save this usage entry.", "error");
-        return;
-      }
-
-      showMessage("Usage recorded successfully", "success");
       setQuantityUsed("");
       setUsageDate(new Date().toISOString().split("T")[0]);
 
@@ -272,6 +267,46 @@ function App() {
     }
   };
 
+  const handleExportReport = () => {
+    if (!usageLogs || usageLogs.length === 0) {
+      showMessage("No usage report data available to export.", "error");
+      return;
+    }
+
+    const headers = ["Item Name", "Quantity Used", "Usage Date", "Updated Risk Level"];
+
+    const rows = usageLogs.map((log) => [
+      log.itemName ?? "",
+      log.quantityUsed ?? "",
+      log.usageDate ? new Date(log.usageDate).toLocaleDateString() : "",
+      getRiskDisplayName(log.riskLevel) ?? ""
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+      )
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `inventory-usage-report-${new Date().toISOString().split("T")[0]}.csv`
+    );
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showMessage(`Report exported successfully. ${usageLogs.length} record(s) exported.`, "success");
+  };
+
   const lowStockItems = useMemo(() => {
     return inventory.filter((item) => item.currentStock <= item.reorderThreshold);
   }, [inventory]);
@@ -339,103 +374,100 @@ function App() {
           </div>
         </section>
 
-        <InventoryRiskLayout/>
+        <InventoryRiskLayout />
 
         <InventoryDashboardLayout
-
-        inventory={inventory}
-        loading={loading}
-        backendConnected={backendConnected}/>
+          inventory={inventory}
+          loading={loading}
+          backendConnected={backendConnected}
+        />
 
         <section className="panel glass-panel classification-panel">
-            <div className="panel-header">
-              <h2>Items by Risk Category</h2>
-              <span className="panel-tag">Classification</span>
+          <div className="panel-header">
+            <h2>Items by Risk Category</h2>
+            <span className="panel-tag">Classification</span>
+          </div>
+
+          <div className="category-container">
+            <div className="risk-category">
+              <h3 className="category-title high-risk-title">
+                🔴 High Risk Items ({itemsByRiskLevel.High.length})
+              </h3>
+              {itemsByRiskLevel.High.length === 0 ? (
+                <p className="empty-category">No high risk items</p>
+              ) : (
+                <div className="items-list">
+                  {itemsByRiskLevel.High.map((item) => (
+                    <div className="category-item high-risk-item" key={item._id}>
+                      <div className="item-info">
+                        <h4 className="high-risk-item-title">
+                          <span className="critical-icon">⚠️</span>
+                          <span>{item.itemName}</span>
+                        </h4>
+                        <p>
+                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                          <strong>{item.totalUsed}</strong>
+                        </p>
+                      </div>
+                      <span className="category-label high-label">High</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            
 
-            <div className="category-container">
-              <div className="risk-category">
-                <h3 className="category-title high-risk-title">
-                  🔴 High Risk Items ({itemsByRiskLevel.High.length})
-                </h3>
-                {itemsByRiskLevel.High.length === 0 ? (
-                  <p className="empty-category">No high risk items</p>
-                ) : (
-                  <div className="items-list">
-                    {itemsByRiskLevel.High.map((item) => (
-                      <div className="category-item high-risk-item" key={item._id}>
-                        <div className="item-info">
-                  <h4 className="high-risk-item-title">
-  <span className="critical-icon">⚠️</span>
-  <span>{item.itemName}</span>
-</h4>
-                          <p>
-                            Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
-                            <strong>{item.reorderThreshold}</strong> | Used:{" "}
-                            <strong>{item.totalUsed}</strong>
-                          </p>
-                        </div>
-                        <span className="category-label high-label">High</span>
+            <div className="risk-category">
+              <h3 className="category-title medium-risk-title">
+                🟡 Medium Risk Items ({itemsByRiskLevel.Medium.length})
+              </h3>
+              {itemsByRiskLevel.Medium.length === 0 ? (
+                <p className="empty-category">No medium risk items</p>
+              ) : (
+                <div className="items-list">
+                  {itemsByRiskLevel.Medium.map((item) => (
+                    <div className="category-item medium-risk-item" key={item._id}>
+                      <div className="item-info">
+                        <h4>{item.itemName}</h4>
+                        <p>
+                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                          <strong>{item.totalUsed}</strong>
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="risk-category">
-                <h3 className="category-title medium-risk-title">
-                  🟡 Medium Risk Items ({itemsByRiskLevel.Medium.length})
-                </h3>
-                {itemsByRiskLevel.Medium.length === 0 ? (
-                  <p className="empty-category">No medium risk items</p>
-                ) : (
-                  <div className="items-list">
-                    {itemsByRiskLevel.Medium.map((item) => (
-                      <div className="category-item medium-risk-item" key={item._id}>
-                        <div className="item-info">
-                          <h4>{item.itemName}</h4>
-                          <p>
-                            Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
-                            <strong>{item.reorderThreshold}</strong> | Used:{" "}
-                            <strong>{item.totalUsed}</strong>
-                          </p>
-                        </div>
-                        <span className="category-label medium-label">Medium</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="risk-category">
-                <h3 className="category-title low-risk-title">
-                  🟢 Low Risk Items ({itemsByRiskLevel.Low.length})
-                </h3>
-                {itemsByRiskLevel.Low.length === 0 ? (
-                  <p className="empty-category">No low risk items</p>
-                ) : (
-                  <div className="items-list">
-                    {itemsByRiskLevel.Low.map((item) => (
-                      <div className="category-item low-risk-item" key={item._id}>
-                        <div className="item-info">
-                          <h4>{item.itemName}</h4>
-                          <p>
-                            Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
-                            <strong>{item.reorderThreshold}</strong> | Used:{" "}
-                            <strong>{item.totalUsed}</strong>
-                          </p>
-                        </div>
-                        <span className="category-label low-label">Low</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      <span className="category-label medium-label">Medium</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          
+
+            <div className="risk-category">
+              <h3 className="category-title low-risk-title">
+                🟢 Low Risk Items ({itemsByRiskLevel.Low.length})
+              </h3>
+              {itemsByRiskLevel.Low.length === 0 ? (
+                <p className="empty-category">No low risk items</p>
+              ) : (
+                <div className="items-list">
+                  {itemsByRiskLevel.Low.map((item) => (
+                    <div className="category-item low-risk-item" key={item._id}>
+                      <div className="item-info">
+                        <h4>{item.itemName}</h4>
+                        <p>
+                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                          <strong>{item.totalUsed}</strong>
+                        </p>
+                      </div>
+                      <span className="category-label low-label">Low</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </section>
-        
 
         <section className="content-grid">
           <div className="panel glass-panel">
@@ -448,27 +480,27 @@ function App() {
               <label>
                 Item Name
                 <input
-                type="text"
-                value={newItemName}
-                onChange={(e) => {
-                  setNewItemName(e.target.value);
-                  if (messageType === "error") {
-                    clearMessage();
-                  }
-                }}
-                onBlur={() => {
-                  if (!newItemName.trim()) {
-                    alert("Please enter an item name.");
-                    showMessage("Please enter an item name.", "error");
-                  }
-                }}
-                placeholder="Enter item name"
+                  type="text"
+                  value={newItemName}
+                  onChange={(e) => {
+                    setNewItemName(e.target.value);
+                    if (messageType === "error") {
+                      clearMessage();
+                    }
+                  }}
+                  onBlur={() => {
+                    if (!newItemName.trim()) {
+                      alert("Please enter an item name.");
+                      showMessage("Please enter an item name.", "error");
+                    }
+                  }}
+                  placeholder="Enter item name"
                 />
-                </label>
-                
-                <label>
-                  Current Stock
-                  <input
+              </label>
+
+              <label>
+                Current Stock
+                <input
                   type="number"
                   min="0"
                   value={newStock}
@@ -532,15 +564,15 @@ function App() {
 
               <label>
                 Date
-                <input type="date" value={usageDate} onChange={(e) => setUsageDate(e.target.value)} />
+                <input
+                  type="date"
+                  value={usageDate}
+                  onChange={(e) => setUsageDate(e.target.value)}
+                />
               </label>
 
               <button type="submit">Submit Usage</button>
             </form>
-
-            {message && <div className={`status-message ${messageType}`}>{message}</div>}
-
-            (feat: add success message styling and dashboard layout)
           </div>
         </section>
 
@@ -656,9 +688,29 @@ function App() {
         </section>
 
         <section className="table-panel">
-          <div className="panel-header">
-            <h2>Inventory Usage Log</h2>
-S            <span className="panel-tag">Recent Activity</span>
+          <div
+            className="panel-header"
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}
+          >
+            <div>
+              <h2>Inventory Usage Log</h2>
+              <span className="panel-tag">Recent Activity</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleExportReport}
+              disabled={usageLogs.length === 0}
+              style={{
+                padding: "10px 14px",
+                borderRadius: "8px",
+                border: "none",
+                cursor: usageLogs.length === 0 ? "not-allowed" : "pointer",
+                opacity: usageLogs.length === 0 ? 0.6 : 1
+              }}
+            >
+              Export Report
+            </button>
           </div>
 
           <div className="table-wrapper">
