@@ -3,6 +3,9 @@ import "./App.css";
 import InventoryRiskLayout from "./InventoryRiskLayout";
 import InventoryDashboardLayout from "./InventoryDashboardLayout";
 import ExportReport from "./ExportReport";
+import ReportDashboard from "./ReportDashboard";
+import UserAccountManagementLayout from "./UserAccountManagementLayout";
+import AddUserForm from "./AddUserForm";
 function App() {
   const API_BASE_URL = "http://localhost:5000";
   const API_URL = `${API_BASE_URL}/api/inventory`;
@@ -436,14 +439,21 @@ useEffect(() => {
           </div>
         </section>
 
-        <InventoryRiskLayout />
-<ExportReport inventory={inventory} />
-        <InventoryDashboardLayout
+<InventoryRiskLayout />
+
+<InventoryDashboardLayout
   inventory={inventory}
   loading={loading}
   backendConnected={backendConnected}
 />
 
+<UserAccountManagementLayout />
+
+<ExportReport inventory={inventory} />
+
+<div className="report-dashboard-section">
+  <ReportDashboard />
+</div>
 
 
         <section className="panel glass-panel classification-panel">

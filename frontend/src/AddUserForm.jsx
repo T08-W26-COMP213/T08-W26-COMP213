@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import ConfirmationBanner from "./ConfirmationBanner";
 
-
-function AddUserForm() {
+function AddUserForm({ onUserAdded }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -62,6 +61,10 @@ function AddUserForm() {
         email: "",
         role: ""
       });
+
+      if (onUserAdded) {
+        onUserAdded();
+      }
     } catch (error) {
       setMessage("Server error while adding user.");
       setMessageType("error");
