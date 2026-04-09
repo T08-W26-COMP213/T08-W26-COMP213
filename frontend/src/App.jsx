@@ -4,6 +4,8 @@ import "jspdf-autotable";
 import "./App.css";
 import ConfirmationBanner from "./ConfirmationBanner";
 import Report from "./Report";
+import ReportGenerationLayout from "./ReportGenerationLayout";
+import UserAccountManagementLayout from "./UserAccountManagementLayout";
 
 function App() {
   const [inventory, setInventory] = useState([]);
@@ -513,6 +515,9 @@ const API_URL = `${API_BASE_URL}/api/inventory`;
           totalUnitsRemaining={totalUnitsRemaining}
         />
 
+        <ReportGenerationLayout />
+        <UserAccountManagementLayout />
+
         <section className="content-grid">
           <div className="panel glass-panel">
             <div className="panel-header">
@@ -616,11 +621,11 @@ const API_URL = `${API_BASE_URL}/api/inventory`;
           </div>
         </section>
 
-        <ConfirmationBanner 
-          message={message} 
-          type={messageType} 
-          onClose={clearMessage}
-          autoCloseDuration={messageType === "success" ? 4000 : 5000}
+        <ConfirmationBanner
+        message={addItemMessage}
+        type={addItemMessageType}
+        onClose={clearAddItemMessage}
+        autoCloseDuration={addItemMessageType === "success" ? 4000 : 5000}
         />
 
         <section className="content-grid">
