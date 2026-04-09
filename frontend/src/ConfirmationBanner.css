@@ -1,0 +1,68 @@
+.confirmation-banner {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 420px;
+  max-width: 680px;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  z-index: 9999;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  border: 1px solid transparent;
+}
+
+.confirmation-banner.success {
+  background: #dff5e4;
+  border-color: #9ed8aa;
+  color: #166534;
+}
+
+.confirmation-banner.error {
+  background: #fde7e7;
+  border-color: #efb0b0;
+  color: #991b1b;
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.banner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.banner-message {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.banner-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: inherit;
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+
+.banner-close:hover {
+  opacity: 1;
+}
