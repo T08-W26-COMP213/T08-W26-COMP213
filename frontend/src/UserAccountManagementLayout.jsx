@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ConfirmationBanner from "./ConfirmationBanner";
+import AddUserForm from "./AddUserForm";
 
 function UserAccountManagementLayout() {
   const [users, setUsers] = useState([]);
@@ -34,9 +35,7 @@ function UserAccountManagementLayout() {
   }, []);
 
   const handleDeleteUser = async (userId, username) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${username}?`
-    );
+    const confirmed = window.confirm(`Are you sure you want to delete ${username}?`);
 
     if (!confirmed) return;
 
@@ -70,6 +69,8 @@ function UserAccountManagementLayout() {
       <ConfirmationBanner message={message} type={messageType} />
 
       <div className="user-management-grid">
+        <AddUserForm onUserAdded={fetchUsers} />
+
         <div className="user-table-card">
           <div className="dashboard-section-header">
             <h3>User Accounts</h3>
