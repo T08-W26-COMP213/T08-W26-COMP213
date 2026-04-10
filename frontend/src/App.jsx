@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import "./App.css";
-import InventoryRiskLayout from "./InventoryRiskLayout";
-import InventoryDashboardLayout from "./InventoryDashboardLayout";
-import ExportReport from "./ExportReport";
+import ConfirmationBanner from "./ConfirmationBanner";
+import Report from "./Report";
+
 function App() {
   const API_BASE_URL = "http://localhost:5000";
   const API_URL = `${API_BASE_URL}/api/inventory`;
@@ -436,204 +436,15 @@ useEffect(() => {
           </div>
         </section>
 
-        <InventoryRiskLayout />
-<ExportReport inventory={inventory} />
-        <InventoryDashboardLayout
-  inventory={inventory}
-  loading={loading}
-  backendConnected={backendConnected}
-/>
-
-
-
-        <section className="panel glass-panel classification-panel">
-          <div className="panel-header">
-            <h2>Items by Risk Category</h2>
-            <span className="panel-tag">Classification</span>
-          </div>
-
-          <div className="category-container">
-            <div className="risk-category">
-              <h3 className="category-title high-risk-title">
-                🔴 High Risk Items ({itemsByRiskLevel.High.length})
-              </h3>
-              {itemsByRiskLevel.High.length === 0 ? (
-                <p className="empty-category">No high risk items</p>
-              ) : (
-                <div className="items-list">
-                  {itemsByRiskLevel.High.map((item) => (
-                    <div className="category-item high-risk-item" key={item._id}>
-                      <div className="item-info">
-                        <h4 className="high-risk-item-title">
-                          <span className="critical-icon">⚠️</span>
-                          <span>{item.itemName}</span>
-                        </h4>
-                        <p>
-                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
-                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
-                          <strong>{item.totalUsed}</strong>
-                        </p>
-                      </div>
-                      <span className="category-label high-label">High</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="risk-category">
-              <h3 className="category-title medium-risk-title">
-                🟡 Medium Risk Items ({itemsByRiskLevel.Medium.length})
-              </h3>
-              {itemsByRiskLevel.Medium.length === 0 ? (
-                <p className="empty-category">No medium risk items</p>
-              ) : (
-                <div className="items-list">
-                  {itemsByRiskLevel.Medium.map((item) => (
-                    <div className="category-item medium-risk-item" key={item._id}>
-                      <div className="item-info">
-                        <h4>{item.itemName}</h4>
-                        <p>
-                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
-                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
-                          <strong>{item.totalUsed}</strong>
-                        </p>
-                      </div>
-                      <span className="category-label medium-label">Medium</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="risk-category">
-              <h3 className="category-title low-risk-title">
-                🟢 Low Risk Items ({itemsByRiskLevel.Low.length})
-              </h3>
-              {itemsByRiskLevel.Low.length === 0 ? (
-                <p className="empty-category">No low risk items</p>
-              ) : (
-                <div className="items-list">
-                  {itemsByRiskLevel.Low.map((item) => (
-                    <div className="category-item low-risk-item" key={item._id}>
-                      <div className="item-info">
-                        <h4>{item.itemName}</h4>
-                        <p>
-                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
-                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
-                          <strong>{item.totalUsed}</strong>
-                        </p>
-                      </div>
-                      <span className="category-label low-label">Low</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section className="panel glass-panel classification-panel">
-          <div className="panel-header">
-            <h2>Restocking Recommendations</h2>
-            <span className="panel-tag">Priorities</span>
-          </div>
-
-          <div className="category-container">
-            <div className="risk-category">
-              <h3 className="category-title high-risk-title">
-                🚨 Immediate ({immediateRestockItems.length})
-              </h3>
-              {immediateRestockItems.length === 0 ? (
-                <p className="empty-category">No immediate restocking items</p>
-              ) : (
-                <div className="items-list">
-                  {immediateRestockItems.map((item) => (
-                    <div className="category-item high-risk-item" key={item._id}>
-                      <div className="item-info">
-                        <h4>{item.itemName}</h4>
-                        <p>
-                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
-                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
-                          <strong>{item.totalUsed}</strong>
-                        </p>
-                      </div>
-                      <span
-                        className={`category-label ${getRestockRecommendationClass(
-                          getRestockRecommendation(item)
-                        )}-label`}
-                      >
-                        {getRestockRecommendation(item)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="risk-category">
-              <h3 className="category-title medium-risk-title">
-                ⏳ Reorder Soon ({reorderSoonItems.length})
-              </h3>
-              {reorderSoonItems.length === 0 ? (
-                <p className="empty-category">No reorder soon items</p>
-              ) : (
-                <div className="items-list">
-                  {reorderSoonItems.map((item) => (
-                    <div className="category-item medium-risk-item" key={item._id}>
-                      <div className="item-info">
-                        <h4>{item.itemName}</h4>
-                        <p>
-                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
-                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
-                          <strong>{item.totalUsed}</strong>
-                        </p>
-                      </div>
-                      <span
-                        className={`category-label ${getRestockRecommendationClass(
-                          getRestockRecommendation(item)
-                        )}-label`}
-                      >
-                        {getRestockRecommendation(item)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="risk-category">
-              <h3 className="category-title low-risk-title">
-                👀 Monitor ({monitorItems.length})
-              </h3>
-              {monitorItems.length === 0 ? (
-                <p className="empty-category">No monitor items</p>
-              ) : (
-                <div className="items-list">
-                  {monitorItems.map((item) => (
-                    <div className="category-item low-risk-item" key={item._id}>
-                      <div className="item-info">
-                        <h4>{item.itemName}</h4>
-                        <p>
-                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
-                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
-                          <strong>{item.totalUsed}</strong>
-                        </p>
-                      </div>
-                      <span
-                        className={`category-label ${getRestockRecommendationClass(
-                          getRestockRecommendation(item)
-                        )}-label`}
-                      >
-                        {getRestockRecommendation(item)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
+        <Report
+          inventory={inventory}
+          usageLogs={usageLogs}
+          lowStockItems={lowStockItems}
+          highRiskItems={highRiskItems}
+          itemsByRiskLevel={itemsByRiskLevel}
+          totalItems={totalItems}
+          totalUnitsRemaining={totalUnitsRemaining}
+        />
 
         <section className="content-grid">
           <div className="panel glass-panel">
@@ -741,6 +552,13 @@ useEffect(() => {
             </form>
           </div>
         </section>
+
+        <ConfirmationBanner 
+          message={message} 
+          type={messageType} 
+          onClose={clearMessage}
+          autoCloseDuration={messageType === "success" ? 4000 : 5000}
+        />
 
         <section className="content-grid">
           <div className="panel glass-panel">
