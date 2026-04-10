@@ -1454,3 +1454,113 @@ tbody td {
   margin-top: 40px;
   padding: 28px 24px;
 }
+.database-status-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.database-status-card {
+  background: #f8fbff;
+  border: 1px solid #dbe7fb;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.database-status-title {
+  font-weight: 700;
+  color: #173b8f;
+  font-size: 1rem;
+}
+
+.database-status-subtext {
+  color: #64748b;
+  font-size: 0.92rem;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.database-settings-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.database-setting-row {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: #f8fbff;
+  border: 1px solid #dbe7fb;
+  border-radius: 14px;
+}
+
+.database-setting-label {
+  font-weight: 700;
+  color: #173b8f;
+  font-size: 1rem;
+}
+
+.database-setting-value {
+  display: block;
+  width: 100%;
+  font-size: 0.95rem;
+  color: #334155;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  background: white;
+  border: 1px solid #d7e1f3;
+  border-radius: 10px;
+  padding: 9px 12px;
+  line-height: 1.35;
+}
+
+.database-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-width: 108px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: white;
+}
+
+.database-status-badge.connected {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.database-status-badge.disconnected {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+.database-state-text {
+  font-weight: 700;
+  color: #334155;
+  text-transform: capitalize;
+  font-size: 0.98rem;
+}
+
+@media (max-width: 900px) {
+  .database-status-overview {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .database-setting-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 8px;
+  }
+}
