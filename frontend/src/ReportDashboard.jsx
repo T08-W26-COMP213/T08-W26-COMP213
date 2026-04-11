@@ -12,6 +12,8 @@ import {
   Cell,
   Legend
 } from "recharts";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 import "./ReportDashboard.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -35,6 +37,8 @@ function ReportDashboard() {
   const [reportType, setReportType] = useState("stock-levels");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isExportingCSV, setIsExportingCSV] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   useEffect(() => {
     const fetchReportData = async () => {
@@ -56,6 +60,12 @@ function ReportDashboard() {
 
     fetchReportData();
   }, []);
+
+  const getDisplayRiskName = (riskLevel) => {
+    if (riskLevel === "High") return "Critical";
+    if (riskLevel === "Medium") return "At Risk";
+    return "Safe";
+  };
 
   const filteredUsageData = useMemo(() => {
     if (!reportData?.usageTrends) return [];
@@ -81,10 +91,194 @@ function ReportDashboard() {
 
   const stockHealthWidth = useMemo(() => {
     if (!selectedItemDetails) return 0;
-    const percentage =
-      (selectedItemDetails.currentStock / selectedItemDetails.reorderThreshold) * 100;
+
+    const threshold = selectedItemDetails.reorderThreshold || 1;
+    const percentage = (selectedItemDetails.currentStock / threshold) * 100;
+
     return Math.min(percentage, 100);
   }, [selectedItemDetails]);
+
+  const exportRows = useMemo(() => {
+    if (!reportData?.itemDetails) return [];
+
+    const sourceData =
+      selectedItem === "All Items"
+        ? reportData.itemDetails
+        : reportData.itemDetails.filter((item) => item.itemName === selectedItem);
+
+    return sourceData.map((item) => ({
+      itemName: item.itemName || "N/A",
+      currentStock: item.currentStock ?? 0,
+      reorderThreshold: item.reorderThreshold ?? 0,
+      totalUsed: item.totalUsed ?? 0,
+      riskLevel: item.riskLevel || "Low",
+      stockStatus:
+        item.riskLevel === "High"
+          ? "Critical"
+          : item.riskLevel === "Medium"
+            ? "At Risk"
+            : "Safe"
+    }));
+  }, [reportData, selectedItem]);
+
+  const handleExportCSV = () => {
+    if (!exportRows.length) return;
+
+    try {
+      setIsExportingCSV(true);
+
+      const headers = [
+        "Item Name",
+        "Current Stock",
+        "Reorder Threshold",
+        "Total Used",
+        "Risk Level",
+        "Status Label"
+      ];
+
+      const escapeCSVValue = (value) => {
+        const stringValue = String(value ?? "");
+
+        if (
+          stringValue.includes(",") ||
+          stringValue.includes('"') ||
+          stringValue.includes("\n")
+        ) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+
+        return stringValue;
+      };
+
+      const csvRows = exportRows.map((item) => [
+        item.itemName,
+        item.currentStock,
+        item.reorderThreshold,
+        item.totalUsed,
+        item.riskLevel,
+        item.stockStatus
+      ]);
+
+      const csvContent = [
+        headers.join(","),
+        ...csvRows.map((row) => row.map(escapeCSVValue).join(","))
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = window.URL.createObjectURL(blob);
+
+      const today = new Date().toISOString().split("T")[0];
+      const safeReportType = reportType.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
+      const safeItemName =
+        selectedItem === "All Items"
+          ? "all-items"
+          : selectedItem.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `stockguard-${safeReportType}-${safeItemName}-${today}.csv`
+      );
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (exportError) {
+      console.error("CSV export failed:", exportError);
+      alert("CSV export failed. Please try again.");
+    } finally {
+      setIsExportingCSV(false);
+    }
+  };
+
+  const handleExportPDF = () => {
+    if (!exportRows.length) return;
+
+    try {
+      setIsExportingPDF(true);
+
+      const doc = new jsPDF();
+      const reportId = `INV-${Date.now()}`;
+      const formattedDate = new Date().toLocaleDateString();
+
+      const safeReportTypeLabel = reportType
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+
+      const summarySource =
+        selectedItem === "All Items"
+          ? exportRows
+          : exportRows.filter((item) => item.itemName === selectedItem);
+
+      const highRiskCount = summarySource.filter((item) => item.riskLevel === "High").length;
+      const mediumRiskCount = summarySource.filter((item) => item.riskLevel === "Medium").length;
+      const lowRiskCount = summarySource.filter((item) => item.riskLevel === "Low").length;
+
+      doc.setFontSize(20);
+      doc.text("StockGuard Inc.", 14, 18);
+
+      doc.setFontSize(14);
+      doc.text("Official Inventory Report", 14, 28);
+
+      doc.setFontSize(11);
+      doc.text(`Report ID: ${reportId}`, 14, 38);
+      doc.text(`Date: ${formattedDate}`, 14, 45);
+      doc.text(`Report Type: ${safeReportTypeLabel}`, 14, 52);
+      doc.text(`Filter: ${selectedItem}`, 14, 59);
+      doc.text(`Total Items: ${summarySource.length}`, 14, 66);
+      doc.text("Status: Active", 14, 73);
+
+      doc.autoTable({
+        startY: 82,
+        head: [["Summary", "Count"]],
+        body: [
+          ["Critical Items", highRiskCount],
+          ["At Risk Items", mediumRiskCount],
+          ["Safe Items", lowRiskCount]
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [37, 99, 235] },
+        styles: { fontSize: 10 }
+      });
+
+      const rows = summarySource.map((item) => [
+        item.itemName,
+        item.currentStock,
+        item.reorderThreshold,
+        item.totalUsed,
+        getDisplayRiskName(item.riskLevel)
+      ]);
+
+      doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 10,
+        head: [["Item Name", "Current Stock", "Threshold", "Total Used", "Risk Level"]],
+        body: rows,
+        theme: "grid",
+        headStyles: { fillColor: [29, 78, 216] },
+        styles: { fontSize: 10 }
+      });
+
+      doc.setFontSize(10);
+      doc.text("Generated by StockGuard System", 14, doc.lastAutoTable.finalY + 18);
+      doc.text("Confidential Business Report", 14, doc.lastAutoTable.finalY + 24);
+
+      const today = new Date().toISOString().split("T")[0];
+      const safeReportTypeFile = reportType.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
+      const safeItemName =
+        selectedItem === "All Items"
+          ? "all-items"
+          : selectedItem.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
+
+      doc.save(`stockguard-${safeReportTypeFile}-${safeItemName}-${today}.pdf`);
+    } catch (pdfError) {
+      console.error("PDF export failed:", pdfError);
+      alert("PDF export failed. Please try again.");
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
 
   if (loading) {
     return <div className="report-message">Loading report dashboard...</div>;
@@ -96,13 +290,33 @@ function ReportDashboard() {
 
   return (
     <div className="report-dashboard">
-      <div className="report-heading-row">
+      <div className="report-heading-row report-heading-row-enhanced">
         <div>
           <p className="report-eyebrow">Analytics Overview</p>
           <h2 className="report-title">Inventory Report Dashboard</h2>
           <p className="report-subtitle">
             Monitor stock usage, compare risk levels, and review item performance.
           </p>
+        </div>
+
+        <div className="report-export-actions">
+          <button
+            type="button"
+            className="report-export-btn"
+            onClick={handleExportCSV}
+            disabled={!exportRows.length || isExportingCSV || isExportingPDF}
+          >
+            {isExportingCSV ? "Exporting CSV..." : "Export CSV"}
+          </button>
+
+          <button
+            type="button"
+            className="report-export-btn report-export-btn-secondary"
+            onClick={handleExportPDF}
+            disabled={!exportRows.length || isExportingCSV || isExportingPDF}
+          >
+            {isExportingPDF ? "Exporting PDF..." : "Export PDF"}
+          </button>
         </div>
       </div>
 
@@ -257,9 +471,9 @@ function ReportDashboard() {
         </div>
       )}
 
-      <div className="report-chart-grid">
+      <div className="report-chart-grid premium-report-grid">
         {reportType === "stock-levels" && selectedItemDetails && (
-          <div className="chart-card">
+          <div className="chart-card premium-chart-card">
             <div className="chart-header">
               <div>
                 <h3>Stock Health</h3>
@@ -310,7 +524,7 @@ function ReportDashboard() {
         )}
 
         {reportType === "stock-levels" && !selectedItemDetails && (
-          <div className="chart-card">
+          <div className="chart-card premium-chart-card">
             <div className="chart-header">
               <div>
                 <h3>Stock Levels Overview</h3>
@@ -319,36 +533,64 @@ function ReportDashboard() {
             </div>
 
             <div className="chart-wrapper">
-              <ResponsiveContainer width="100%" height={340}>
+              <ResponsiveContainer width="100%" height={360}>
                 <BarChart
                   data={reportData.itemDetails}
-                  margin={{ top: 10, right: 20, left: 0, bottom: 45 }}
+                  margin={{ top: 10, right: 30, left: 10, bottom: 70 }}
                 >
+                  <defs>
+                    <linearGradient id="stockBarGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#1d4ed8" />
+                    </linearGradient>
+                  </defs>
+
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis
                     dataKey="itemName"
-                    angle={-20}
+                    interval={0}
+                    angle={-25}
                     textAnchor="end"
                     height={70}
-                    tick={{ fill: "#4b5563", fontSize: 12 }}
+                    tick={{
+                      fill: "#475569",
+                      fontSize: 12,
+                      fontWeight: 600
+                    }}
+                    tickFormatter={(value) =>
+                      value.length > 14 ? `${value.substring(0, 14)}...` : value
+                    }
                   />
-                  <YAxis tick={{ fill: "#4b5563", fontSize: 12 }} />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "1px solid #e5e7eb",
-                      boxShadow: "0 8px 20px rgba(0,0,0,0.08)"
+                  <YAxis
+                    tick={{
+                      fill: "#475569",
+                      fontSize: 12,
+                      fontWeight: 600
                     }}
                   />
-                  <Bar dataKey="currentStock" fill="#2563eb" radius={[8, 8, 0, 0]} />
+                  <Tooltip
+                    formatter={(value) => [`${value}`, "Current Stock"]}
+                    labelFormatter={(label) => `Item: ${label}`}
+                    contentStyle={{
+                      borderRadius: "14px",
+                      border: "1px solid #e5e7eb",
+                      boxShadow: "0 10px 24px rgba(0,0,0,0.08)"
+                    }}
+                  />
+                  <Bar
+                    dataKey="currentStock"
+                    fill="url(#stockBarGradient)"
+                    radius={[8, 8, 0, 0]}
+                    barSize={34}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
         )}
 
-        {reportType === "risk-analysis" && (
-          <div className="chart-card">
+        {reportType === "risk-analysis" && selectedItem === "All Items" && (
+          <div className="chart-card premium-chart-card">
             <div className="chart-header">
               <div>
                 <h3>Risk Distribution</h3>
@@ -388,8 +630,61 @@ function ReportDashboard() {
           </div>
         )}
 
+        {reportType === "risk-analysis" &&
+          selectedItem !== "All Items" &&
+          selectedItemDetails && (
+            <div className="chart-card premium-chart-card">
+              <div className="chart-header">
+                <div>
+                  <h3>Item Risk Insight</h3>
+                  <p>Detailed risk and stock breakdown for the selected inventory item.</p>
+                </div>
+              </div>
+
+              <div className="stock-health-card">
+                <div className="stock-health-top">
+                  <div className="stock-health-stat">
+                    <span>Current Stock</span>
+                    <strong>{selectedItemDetails.currentStock}</strong>
+                  </div>
+
+                  <div className="stock-health-stat">
+                    <span>Threshold</span>
+                    <strong>{selectedItemDetails.reorderThreshold}</strong>
+                  </div>
+                </div>
+
+                <div className="stock-health-bar-area">
+                  <div className="stock-health-bar-labels">
+                    <span>Risk-Based Stock Position</span>
+                    <span>{Math.round(stockHealthWidth)}%</span>
+                  </div>
+
+                  <div className="stock-health-bar-track">
+                    <div
+                      className={`stock-health-bar-fill ${selectedItemDetails.riskLevel.toLowerCase()}`}
+                      style={{ width: `${stockHealthWidth}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="stock-health-summary">
+                  <div className="stock-summary-box">
+                    <span>Total Used</span>
+                    <strong>{selectedItemDetails.totalUsed}</strong>
+                  </div>
+
+                  <div className="stock-summary-box">
+                    <span>Risk Status</span>
+                    <strong>{selectedItemDetails.riskLevel}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
         {reportType === "usage-history" && (
-          <div className="chart-card">
+          <div className="chart-card premium-chart-card">
             <div className="chart-header">
               <div>
                 <h3>Usage by Item</h3>
@@ -407,13 +702,26 @@ function ReportDashboard() {
                   data={filteredUsageData}
                   margin={{ top: 10, right: 20, left: 0, bottom: 45 }}
                 >
+                  <defs>
+                    <linearGradient id="usageBarGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#1d4ed8" />
+                    </linearGradient>
+                  </defs>
+
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis
                     dataKey="name"
+                    interval={0}
                     angle={selectedItem === "All Items" ? -20 : 0}
                     textAnchor={selectedItem === "All Items" ? "end" : "middle"}
                     height={60}
                     tick={{ fill: "#4b5563", fontSize: 12 }}
+                    tickFormatter={(value) =>
+                      selectedItem === "All Items" && value.length > 14
+                        ? `${value.substring(0, 14)}...`
+                        : value
+                    }
                   />
                   <YAxis tick={{ fill: "#4b5563", fontSize: 12 }} />
                   <Tooltip
@@ -425,7 +733,7 @@ function ReportDashboard() {
                   />
                   <Bar
                     dataKey="totalUsed"
-                    fill="#2563eb"
+                    fill="url(#usageBarGradient)"
                     radius={[8, 8, 0, 0]}
                     barSize={selectedItem === "All Items" ? 28 : 42}
                   />
