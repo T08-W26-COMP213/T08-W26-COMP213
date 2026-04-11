@@ -5,7 +5,6 @@ import InventoryDashboardLayout from "./InventoryDashboardLayout";
 import ExportReport from "./ExportReport";
 import ReportDashboard from "./ReportDashboard";
 import UserAccountManagementLayout from "./UserAccountManagementLayout";
-import AddUserForm from "./AddUserForm";
 import ConfirmationBanner from "./ConfirmationBanner";
 import Report from "./Report";
 import SystemConfigurationLayout from "./SystemConfigurationLayout";
@@ -25,22 +24,8 @@ function App() {
   })();
 
   const [inventory, setInventory] = useState([]);
-const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  fetch("http://localhost:5000/api/inventory")
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("App inventory:", data);
-      setInventory(data);
-      setLoading(false);
-    })
-    .catch((err) => {
-      console.error("Fetch error:", err);
-      setLoading(false);
-    });
-}, []);
-  
   const [selectedItemId, setSelectedItemId] = useState("");
   const [quantityUsed, setQuantityUsed] = useState("");
   const [usageDate, setUsageDate] = useState(new Date().toISOString().split("T")[0]);
@@ -48,11 +33,13 @@ useEffect(() => {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
 
-
   const [newItemName, setNewItemName] = useState("");
   const [newStock, setNewStock] = useState("");
   const [newThreshold, setNewThreshold] = useState("");
   const [backendConnected, setBackendConnected] = useState(false);
+  const [databaseConnected, setDatabaseConnected] = useState(false);
+  const [databaseStateLabel, setDatabaseStateLabel] = useState("disconnected");
+  const [databaseUri, setDatabaseUri] = useState("Not available");
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingItemId, setEditingItemId] = useState("");
@@ -111,6 +98,7 @@ useEffect(() => {
         throw new Error(data.message || "Failed to fetch inventory.");
       }
 
+      console.log("App inventory:", data);
       setInventory(data);
 
       if (data.length > 0) {
@@ -122,6 +110,7 @@ useEffect(() => {
         setSelectedItemId("");
       }
     } catch (error) {
+      console.error("Fetch error:", error);
       showMessage("Failed to load inventory data.", "error");
     }
   };
@@ -141,16 +130,27 @@ useEffect(() => {
     }
   };
 
+  const fetchHealthStatus = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/health`);
+      const data = await response.json();
+
+      setBackendConnected(response.ok);
+      setDatabaseConnected(Boolean(data?.database?.connected));
+      setDatabaseStateLabel(data?.database?.stateLabel || "disconnected");
+      setDatabaseUri(data?.database?.displayUri || "Not available");
+    } catch (error) {
+      setBackendConnected(false);
+      setDatabaseConnected(false);
+      setDatabaseStateLabel("disconnected");
+      setDatabaseUri("Not available");
+    }
+  };
+
   useEffect(() => {
     const initializeApp = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/health`);
-        setBackendConnected(res.ok);
-      } catch (error) {
-        setBackendConnected(false);
-      }
-
       setLoading(true);
+      await fetchHealthStatus();
       await Promise.all([fetchInventory(), fetchUsageLogs()]);
       setLoading(false);
     };
@@ -234,7 +234,7 @@ useEffect(() => {
       setQuantityUsed("");
       setUsageDate(new Date().toISOString().split("T")[0]);
 
-      await Promise.all([fetchInventory(), fetchUsageLogs()]);
+      await Promise.all([fetchHealthStatus(), fetchInventory(), fetchUsageLogs()]);
     } catch (error) {
       alert("Something went wrong while saving the usage entry.");
       showMessage("Something went wrong while saving the usage entry.", "error");
@@ -313,7 +313,7 @@ useEffect(() => {
       );
 
       resetItemForm();
-      await fetchInventory();
+      await Promise.all([fetchHealthStatus(), fetchInventory()]);
     } catch (error) {
       alert(isEditing ? "Server error while updating item." : "Server error while adding item.");
       showMessage(
@@ -443,29 +443,29 @@ useEffect(() => {
           </div>
         </section>
 
-<InventoryRiskLayout
-  inventory={inventory}
-  loading={loading}
-  backendConnected={backendConnected}
-  fetchInventory={fetchInventory}
-/>
+        <InventoryRiskLayout
+          inventory={inventory}
+          loading={loading}
+          backendConnected={backendConnected}
+          fetchInventory={fetchInventory}
+        />
 
-<InventoryDashboardLayout
-  inventory={inventory}
-  loading={loading}
-  backendConnected={backendConnected}
-/>
+        <InventoryDashboardLayout
+          inventory={inventory}
+          loading={loading}
+          backendConnected={backendConnected}
+        />
 
-<UserAccountManagementLayout />
-
+        <UserAccountManagementLayout />
 <SystemConfigurationLayout />
 
 <ExportReport inventory={inventory} />
 
-<div className="report-dashboard-section">
-  <ReportDashboard />
-</div>
+        <ExportReport inventory={inventory} />
 
+        <div className="report-dashboard-section">
+          <ReportDashboard />
+        </div>
 
         <section className="panel glass-panel classification-panel">
           <div className="panel-header">
@@ -655,6 +655,7 @@ useEffect(() => {
             </div>
           </div>
         </section>
+
         <Report
           inventory={inventory}
           usageLogs={usageLogs}
@@ -772,9 +773,9 @@ useEffect(() => {
           </div>
         </section>
 
-        <ConfirmationBanner 
-          message={message} 
-          type={messageType} 
+        <ConfirmationBanner
+          message={message}
+          type={messageType}
           onClose={clearMessage}
           autoCloseDuration={messageType === "success" ? 4000 : 5000}
         />
@@ -823,29 +824,56 @@ useEffect(() => {
 
           <div className="panel glass-panel">
             <div className="panel-header">
-              <h2>System Status</h2>
-              <span className="panel-tag">Backend Sync</span>
+              <h2>Database Settings</h2>
+              <span className="panel-tag">MongoDB</span>
             </div>
 
-            <div className="empty-state">
-              <h3>
-                {loading
-                  ? "Loading..."
-                  : backendConnected
-                  ? "Backend Connected"
-                  : "Backend Not Connected"}
-              </h3>
-              <p>
-                {backendConnected
-                  ? "Inventory is synchronized with MongoDB."
-                  : "Backend server is not reachable."}
-              </p>
-              <p>
-                <strong>Server Port:</strong> {SERVER_PORT}
-              </p>
-              <p>
-                <strong>API Base URL:</strong> {API_BASE_URL}
-              </p>
+            <div className="database-status-overview">
+              <div className="database-status-card">
+                <span className="database-status-title">MongoDB Status</span>
+                <span
+                  className={`database-status-badge ${
+                    databaseConnected ? "connected" : "disconnected"
+                  }`}
+                >
+                  {databaseConnected ? "Connected" : "Disconnected"}
+                </span>
+                <p className="database-status-subtext">{databaseStateLabel}</p>
+              </div>
+
+              <div className="database-status-card">
+                <span className="database-status-title">Backend Status</span>
+                <span
+                  className={`database-status-badge ${
+                    backendConnected ? "connected" : "disconnected"
+                  }`}
+                >
+                  {backendConnected ? "Available" : "Unavailable"}
+                </span>
+                <p className="database-status-subtext">API service health</p>
+              </div>
+            </div>
+
+            <div className="database-settings-box">
+              <div className="database-setting-row">
+                <span className="database-setting-label">MongoDB URI</span>
+                <code className="database-setting-value">{databaseUri}</code>
+              </div>
+
+              <div className="database-setting-row">
+                <span className="database-setting-label">Connection State</span>
+                <span className="database-state-text">{databaseStateLabel}</span>
+              </div>
+
+              <div className="database-setting-row">
+                <span className="database-setting-label">Server Port</span>
+                <span className="database-state-text">{SERVER_PORT}</span>
+              </div>
+
+              <div className="database-setting-row">
+                <span className="database-setting-label">API Base URL</span>
+                <code className="database-setting-value">{API_BASE_URL}</code>
+              </div>
             </div>
           </div>
         </section>

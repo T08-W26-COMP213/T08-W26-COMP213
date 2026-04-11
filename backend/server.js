@@ -6,7 +6,6 @@ require("dotenv").config();
 const inventoryRoutes = require("./routes/inventoryRoutes");
 const userRoutes = require("./routes/userRoutes");
 const reportRoutes = require("./routes/reportRoutes");
-const systemSettingsRoutes = require("./routes/systemSettingsRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,6 +13,16 @@ const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/inventoryd
 
 app.use(cors());
 app.use(express.json());
+
+const getDisplayMongoUri = () => {
+  if (!MONGO_URI) return "Not available";
+
+  if (MONGO_URI.includes("@")) {
+    return MONGO_URI.replace(/\/\/([^:]+):([^@]+)@/, "//$1:****@");
+  }
+
+  return MONGO_URI;
+};
 
 const getDatabaseStatus = () => {
   const readyState = mongoose.connection.readyState;
@@ -28,7 +37,8 @@ const getDatabaseStatus = () => {
         ? "connecting"
         : readyState === 3
         ? "disconnecting"
-        : "disconnected"
+        : "disconnected",
+    displayUri: getDisplayMongoUri()
   };
 };
 
@@ -81,7 +91,6 @@ app.get("/api/health", (req, res) => {
 app.use("/api/inventory", requireDatabaseConnection, inventoryRoutes);
 app.use("/api/users", requireDatabaseConnection, userRoutes);
 app.use("/api/reports", requireDatabaseConnection, reportRoutes);
-app.use("/api/system-settings", requireDatabaseConnection, systemSettingsRoutes);
 
 app.use((err, req, res, next) => {
   console.error("Server error:", err);
