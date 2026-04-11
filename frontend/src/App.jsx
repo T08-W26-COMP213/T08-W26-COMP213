@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import InventoryRiskLayout from "./InventoryRiskLayout";
 import InventoryDashboardLayout from "./InventoryDashboardLayout";
@@ -31,12 +31,15 @@ function App() {
   const [quantityUsed, setQuantityUsed] = useState("");
   const [usageDate, setUsageDate] = useState(new Date().toISOString().split("T")[0]);
   const [usageLogs, setUsageLogs] = useState([]);
+  const [systemActivityLogs, setSystemActivityLogs] = useState([]);
+
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
 
   const [newItemName, setNewItemName] = useState("");
   const [newStock, setNewStock] = useState("");
   const [newThreshold, setNewThreshold] = useState("");
+
   const [backendConnected, setBackendConnected] = useState(false);
   const [databaseConnected, setDatabaseConnected] = useState(false);
   const [databaseStateLabel, setDatabaseStateLabel] = useState("disconnected");
@@ -53,6 +56,17 @@ function App() {
   const clearMessage = () => {
     setMessage("");
     setMessageType("");
+  };
+
+  const addSystemLog = (level, logMessage) => {
+    const newLog = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: new Date().toLocaleString(),
+      level,
+      message: logMessage
+    };
+
+    setSystemActivityLogs((prevLogs) => [newLog, ...prevLogs].slice(0, 50));
   };
 
   const getRiskDisplayName = (riskLevel) => {
@@ -90,6 +104,12 @@ function App() {
     return "low";
   };
 
+  const getLogLevelClass = (level) => {
+    if (level === "ERROR") return "high";
+    if (level === "WARN") return "medium";
+    return "low";
+  };
+
   const fetchInventory = async () => {
     try {
       const response = await fetch(API_URL);
@@ -99,7 +119,6 @@ function App() {
         throw new Error(data.message || "Failed to fetch inventory.");
       }
 
-      console.log("App inventory:", data);
       setInventory(data);
 
       if (data.length > 0) {
@@ -111,8 +130,8 @@ function App() {
         setSelectedItemId("");
       }
     } catch (error) {
-      console.error("Fetch error:", error);
       showMessage("Failed to load inventory data.", "error");
+      addSystemLog("ERROR", error.message || "Failed to load inventory data.");
     }
   };
 
@@ -128,6 +147,7 @@ function App() {
       setUsageLogs(data);
     } catch (error) {
       showMessage("Failed to load usage logs.", "error");
+      addSystemLog("ERROR", error.message || "Failed to load usage logs.");
     }
   };
 
@@ -140,11 +160,18 @@ function App() {
       setDatabaseConnected(Boolean(data?.database?.connected));
       setDatabaseStateLabel(data?.database?.stateLabel || "disconnected");
       setDatabaseUri(data?.database?.displayUri || "Not available");
+
+      if (response.ok) {
+        addSystemLog("INFO", "Backend connected successfully.");
+      } else {
+        addSystemLog("WARN", "Backend health check returned a non-success status.");
+      }
     } catch (error) {
       setBackendConnected(false);
       setDatabaseConnected(false);
       setDatabaseStateLabel("disconnected");
       setDatabaseUri("Not available");
+      addSystemLog("ERROR", "Backend server is not reachable.");
     }
   };
 
@@ -154,6 +181,7 @@ function App() {
       await fetchHealthStatus();
       await Promise.all([fetchInventory(), fetchUsageLogs()]);
       setLoading(false);
+      addSystemLog("INFO", "System initialization completed.");
     };
 
     initializeApp();
@@ -176,6 +204,7 @@ function App() {
     setNewStock(String(item.currentStock ?? ""));
     setNewThreshold(String(item.reorderThreshold ?? ""));
     clearMessage();
+    addSystemLog("INFO", `Editing inventory item: ${item.itemName}.`);
   };
 
   const resetItemForm = () => {
@@ -195,18 +224,21 @@ function App() {
     if (!selectedItemId) {
       alert("Please choose an item before submitting.");
       showMessage("Please choose an item before submitting.", "error");
+      addSystemLog("WARN", "Usage submission blocked: no item selected.");
       return;
     }
 
     if (!usageDate || !String(usageDate).trim()) {
       alert("Please choose the date of use.");
       showMessage("Please choose the date of use.", "error");
+      addSystemLog("WARN", "Usage submission blocked: no usage date selected.");
       return;
     }
 
     if (quantityUsed === "" || Number.isNaN(usedQty) || usedQty <= 0) {
       alert("Please enter a quantity greater than 0.");
       showMessage("Please enter a quantity greater than 0.", "error");
+      addSystemLog("WARN", "Usage submission blocked: invalid quantity.");
       return;
     }
 
@@ -226,12 +258,15 @@ function App() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || "Failed to update inventory usage.");
-        showMessage(data.message || "Failed to update inventory usage.", "error");
+        const errorMessage = data.message || "Failed to update inventory usage.";
+        alert(errorMessage);
+        showMessage(errorMessage, "error");
+        addSystemLog("ERROR", errorMessage);
         return;
       }
 
       showMessage(data.message || "Usage recorded successfully.", "success");
+      addSystemLog("INFO", `Usage recorded successfully. Quantity used: ${usedQty}.`);
       setQuantityUsed("");
       setUsageDate(new Date().toISOString().split("T")[0]);
 
@@ -239,6 +274,7 @@ function App() {
     } catch (error) {
       alert("Something went wrong while saving the usage entry.");
       showMessage("Something went wrong while saving the usage entry.", "error");
+      addSystemLog("ERROR", "Something went wrong while saving the usage entry.");
     }
   };
 
@@ -253,24 +289,28 @@ function App() {
     if (!newItemName || !trimmedItemName) {
       alert("Please enter an item name.");
       showMessage("Please enter an item name.", "error");
+      addSystemLog("WARN", "Add item blocked: item name was missing.");
       return;
     }
 
     if (trimmedItemName.length < 2) {
       alert("Item name must be at least 2 characters long.");
       showMessage("Item name must be at least 2 characters long.", "error");
+      addSystemLog("WARN", "Add item blocked: item name too short.");
       return;
     }
 
     if (newStock === "" || Number.isNaN(stockValue) || stockValue < 0) {
       alert("Current stock must be a valid number greater than or equal to 0.");
       showMessage("Current stock must be a valid number greater than or equal to 0.", "error");
+      addSystemLog("WARN", "Add item blocked: invalid current stock value.");
       return;
     }
 
     if (newThreshold === "" || Number.isNaN(thresholdValue) || thresholdValue < 1) {
       alert("Reorder threshold must be a valid number greater than or equal to 1.");
       showMessage("Reorder threshold must be a valid number greater than or equal to 1.", "error");
+      addSystemLog("WARN", "Add item blocked: invalid reorder threshold value.");
       return;
     }
 
@@ -293,15 +333,12 @@ function App() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(
+        const errorMessage =
           data.message ||
-            (isEditing ? "Failed to update inventory item." : "Failed to add inventory item.")
-        );
-        showMessage(
-          data.message ||
-            (isEditing ? "Failed to update inventory item." : "Failed to add inventory item."),
-          "error"
-        );
+          (isEditing ? "Failed to update inventory item." : "Failed to add inventory item.");
+        alert(errorMessage);
+        showMessage(errorMessage, "error");
+        addSystemLog("ERROR", errorMessage);
         return;
       }
 
@@ -313,20 +350,29 @@ function App() {
         "success"
       );
 
+      addSystemLog(
+        "INFO",
+        isEditing
+          ? `Inventory item updated: ${trimmedItemName}.`
+          : `Inventory item added: ${trimmedItemName}.`
+      );
+
       resetItemForm();
       await Promise.all([fetchHealthStatus(), fetchInventory()]);
     } catch (error) {
-      alert(isEditing ? "Server error while updating item." : "Server error while adding item.");
-      showMessage(
-        isEditing ? "Server error while updating item." : "Server error while adding item.",
-        "error"
-      );
+      const errorMessage = isEditing
+        ? "Server error while updating item."
+        : "Server error while adding item.";
+      alert(errorMessage);
+      showMessage(errorMessage, "error");
+      addSystemLog("ERROR", errorMessage);
     }
   };
 
   const handleExportReport = () => {
     if (!usageLogs || usageLogs.length === 0) {
       showMessage("No usage report data available to export.", "error");
+      addSystemLog("WARN", "Export blocked because no usage report data was available.");
       return;
     }
 
@@ -365,6 +411,10 @@ function App() {
       `Report exported successfully. ${usageLogs.length} record(s) exported.`,
       "success"
     );
+    addSystemLog(
+      "INFO",
+      `Usage report exported successfully with ${usageLogs.length} record(s).`
+    );
   };
 
   const lowStockItems = useMemo(() => {
@@ -383,15 +433,17 @@ function App() {
     };
   }, [inventory]);
 
-  const immediateRestockItems = inventory.filter(
-    (item) => getRestockRecommendation(item) === "Immediate"
-  );
+  const immediateRestockItems = useMemo(() => {
+    return inventory.filter((item) => getRestockRecommendation(item) === "Immediate");
+  }, [inventory]);
 
-  const reorderSoonItems = inventory.filter(
-    (item) => getRestockRecommendation(item) === "Reorder Soon"
-  );
+  const reorderSoonItems = useMemo(() => {
+    return inventory.filter((item) => getRestockRecommendation(item) === "Reorder Soon");
+  }, [inventory]);
 
-  const monitorItems = inventory.filter((item) => getRestockRecommendation(item) === "Monitor");
+  const monitorItems = useMemo(() => {
+    return inventory.filter((item) => getRestockRecommendation(item) === "Monitor");
+  }, [inventory]);
 
   const totalItems = inventory.length;
 
@@ -458,10 +510,8 @@ function App() {
         />
 
         <UserAccountManagementLayout />
-<SystemConfigurationLayout />
-<SystemSettings />
-
-<ExportReport inventory={inventory} />
+        <SystemConfigurationLayout />
+        <SystemSettings />
 
         <ExportReport inventory={inventory} />
 
@@ -877,6 +927,44 @@ function App() {
                 <code className="database-setting-value">{API_BASE_URL}</code>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="table-panel">
+          <div className="panel-header">
+            <h2>System Activity Log</h2>
+            <span className="panel-tag">Monitoring</span>
+          </div>
+
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Level</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody>
+                {systemActivityLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan="3">No system activity logged yet.</td>
+                  </tr>
+                ) : (
+                  systemActivityLogs.map((log) => (
+                    <tr key={log.id}>
+                      <td>{log.timestamp}</td>
+                      <td>
+                        <span className={`risk-badge ${getLogLevelClass(log.level)}`}>
+                          {log.level}
+                        </span>
+                      </td>
+                      <td>{log.message}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </section>
 
