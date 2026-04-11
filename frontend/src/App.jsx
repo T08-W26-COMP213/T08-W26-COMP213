@@ -7,6 +7,7 @@ import ReportDashboard from "./ReportDashboard";
 import UserAccountManagementLayout from "./UserAccountManagementLayout";
 import ConfirmationBanner from "./ConfirmationBanner";
 import Report from "./Report";
+import SystemConfigurationLayout from "./SystemConfigurationLayout";
 
 function App() {
   const API_BASE_URL = "http://localhost:5000";
@@ -456,6 +457,9 @@ function App() {
         />
 
         <UserAccountManagementLayout />
+<SystemConfigurationLayout />
+
+<ExportReport inventory={inventory} />
 
         <ExportReport inventory={inventory} />
 
