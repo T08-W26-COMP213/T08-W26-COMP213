@@ -126,11 +126,26 @@ mongoose.connection.on("error", (error) => {
 
 app.get("/api/health", (req, res) => {
   const database = getDatabaseStatus();
+  const uptimeInSeconds = Math.floor(process.uptime());
 
   res.json({
-    status: "OK",
-    message: "Server is running",
-    database
+    success: true,
+    server: {
+      status: "online",
+      port: PORT,
+      uptime: uptimeInSeconds
+    },
+    api: {
+      status: "healthy",
+      message: "API is responding normally"
+    },
+    database: {
+      connected: database.connected,
+      readyState: database.readyState,
+      stateLabel: database.stateLabel,
+      displayUri: database.displayUri
+    },
+    timestamp: new Date().toISOString()
   });
 });
 
