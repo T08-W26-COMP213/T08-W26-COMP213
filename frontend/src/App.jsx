@@ -1,10 +1,12 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
+import InventoryRiskLayout from "./InventoryRiskLayout";
+import InventoryDashboardLayout from "./InventoryDashboardLayout";
+import ExportReport from "./ExportReport";
+import ReportDashboard from "./ReportDashboard";
+import UserAccountManagementLayout from "./UserAccountManagementLayout";
 import ConfirmationBanner from "./ConfirmationBanner";
 import Report from "./Report";
-import ReportGenerationLayout from "./ReportGenerationLayout";
-import UserAccountManagementLayout from "./UserAccountManagementLayout";
-import SystemStatusMonitoringLayout from "./SystemStatusMonitoringLayout";
 
 function App() {
   const API_BASE_URL = "http://localhost:5000";
@@ -21,34 +23,25 @@ function App() {
   })();
 
   const [inventory, setInventory] = useState([]);
-const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  fetch("http://localhost:5000/api/inventory")
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("App inventory:", data);
-      setInventory(data);
-      setLoading(false);
-    })
-    .catch((err) => {
-      console.error("Fetch error:", err);
-      setLoading(false);
-    });
-}, []);
-  
   const [selectedItemId, setSelectedItemId] = useState("");
   const [quantityUsed, setQuantityUsed] = useState("");
   const [usageDate, setUsageDate] = useState(new Date().toISOString().split("T")[0]);
   const [usageLogs, setUsageLogs] = useState([]);
+  const [systemActivityLogs, setSystemActivityLogs] = useState([]);
+
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
-
 
   const [newItemName, setNewItemName] = useState("");
   const [newStock, setNewStock] = useState("");
   const [newThreshold, setNewThreshold] = useState("");
+
   const [backendConnected, setBackendConnected] = useState(false);
+  const [databaseConnected, setDatabaseConnected] = useState(false);
+  const [databaseStateLabel, setDatabaseStateLabel] = useState("disconnected");
+  const [databaseUri, setDatabaseUri] = useState("Not available");
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingItemId, setEditingItemId] = useState("");
@@ -61,6 +54,17 @@ useEffect(() => {
   const clearMessage = () => {
     setMessage("");
     setMessageType("");
+  };
+
+  const addSystemLog = (level, logMessage) => {
+    const newLog = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: new Date().toLocaleString(),
+      level,
+      message: logMessage
+    };
+
+    setSystemActivityLogs((prevLogs) => [newLog, ...prevLogs].slice(0, 50));
   };
 
   const getRiskDisplayName = (riskLevel) => {
@@ -98,6 +102,12 @@ useEffect(() => {
     return "low";
   };
 
+  const getLogLevelClass = (level) => {
+    if (level === "ERROR") return "high";
+    if (level === "WARN") return "medium";
+    return "low";
+  };
+
   const fetchInventory = async () => {
     try {
       const response = await fetch(API_URL);
@@ -119,6 +129,7 @@ useEffect(() => {
       }
     } catch (error) {
       showMessage("Failed to load inventory data.", "error");
+      addSystemLog("ERROR", error.message || "Failed to load inventory data.");
     }
   };
 
@@ -134,21 +145,41 @@ useEffect(() => {
       setUsageLogs(data);
     } catch (error) {
       showMessage("Failed to load usage logs.", "error");
+      addSystemLog("ERROR", error.message || "Failed to load usage logs.");
+    }
+  };
+
+  const fetchHealthStatus = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/health`);
+      const data = await response.json();
+
+      setBackendConnected(response.ok);
+      setDatabaseConnected(Boolean(data?.database?.connected));
+      setDatabaseStateLabel(data?.database?.stateLabel || "disconnected");
+      setDatabaseUri(data?.database?.displayUri || "Not available");
+
+      if (response.ok) {
+        addSystemLog("INFO", "Backend connected successfully.");
+      } else {
+        addSystemLog("WARN", "Backend health check returned a non-success status.");
+      }
+    } catch (error) {
+      setBackendConnected(false);
+      setDatabaseConnected(false);
+      setDatabaseStateLabel("disconnected");
+      setDatabaseUri("Not available");
+      addSystemLog("ERROR", "Backend server is not reachable.");
     }
   };
 
   useEffect(() => {
     const initializeApp = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/health`);
-        setBackendConnected(res.ok);
-      } catch (error) {
-        setBackendConnected(false);
-      }
-
       setLoading(true);
+      await fetchHealthStatus();
       await Promise.all([fetchInventory(), fetchUsageLogs()]);
       setLoading(false);
+      addSystemLog("INFO", "System initialization completed.");
     };
 
     initializeApp();
@@ -171,6 +202,7 @@ useEffect(() => {
     setNewStock(String(item.currentStock ?? ""));
     setNewThreshold(String(item.reorderThreshold ?? ""));
     clearMessage();
+    addSystemLog("INFO", `Editing inventory item: ${item.itemName}.`);
   };
 
   const resetItemForm = () => {
@@ -190,18 +222,21 @@ useEffect(() => {
     if (!selectedItemId) {
       alert("Please choose an item before submitting.");
       showMessage("Please choose an item before submitting.", "error");
+      addSystemLog("WARN", "Usage submission blocked: no item selected.");
       return;
     }
 
     if (!usageDate || !String(usageDate).trim()) {
       alert("Please choose the date of use.");
       showMessage("Please choose the date of use.", "error");
+      addSystemLog("WARN", "Usage submission blocked: no usage date selected.");
       return;
     }
 
     if (quantityUsed === "" || Number.isNaN(usedQty) || usedQty <= 0) {
       alert("Please enter a quantity greater than 0.");
       showMessage("Please enter a quantity greater than 0.", "error");
+      addSystemLog("WARN", "Usage submission blocked: invalid quantity.");
       return;
     }
 
@@ -221,19 +256,23 @@ useEffect(() => {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || "Failed to update inventory usage.");
-        showMessage(data.message || "Failed to update inventory usage.", "error");
+        const errorMessage = data.message || "Failed to update inventory usage.";
+        alert(errorMessage);
+        showMessage(errorMessage, "error");
+        addSystemLog("ERROR", errorMessage);
         return;
       }
 
       showMessage(data.message || "Usage recorded successfully.", "success");
+      addSystemLog("INFO", `Usage recorded successfully. Quantity used: ${usedQty}.`);
       setQuantityUsed("");
       setUsageDate(new Date().toISOString().split("T")[0]);
 
-      await Promise.all([fetchInventory(), fetchUsageLogs()]);
+      await Promise.all([fetchHealthStatus(), fetchInventory(), fetchUsageLogs()]);
     } catch (error) {
       alert("Something went wrong while saving the usage entry.");
       showMessage("Something went wrong while saving the usage entry.", "error");
+      addSystemLog("ERROR", "Something went wrong while saving the usage entry.");
     }
   };
 
@@ -248,24 +287,28 @@ useEffect(() => {
     if (!newItemName || !trimmedItemName) {
       alert("Please enter an item name.");
       showMessage("Please enter an item name.", "error");
+      addSystemLog("WARN", "Add item blocked: item name was missing.");
       return;
     }
 
     if (trimmedItemName.length < 2) {
       alert("Item name must be at least 2 characters long.");
       showMessage("Item name must be at least 2 characters long.", "error");
+      addSystemLog("WARN", "Add item blocked: item name too short.");
       return;
     }
 
     if (newStock === "" || Number.isNaN(stockValue) || stockValue < 0) {
       alert("Current stock must be a valid number greater than or equal to 0.");
       showMessage("Current stock must be a valid number greater than or equal to 0.", "error");
+      addSystemLog("WARN", "Add item blocked: invalid current stock value.");
       return;
     }
 
     if (newThreshold === "" || Number.isNaN(thresholdValue) || thresholdValue < 1) {
       alert("Reorder threshold must be a valid number greater than or equal to 1.");
       showMessage("Reorder threshold must be a valid number greater than or equal to 1.", "error");
+      addSystemLog("WARN", "Add item blocked: invalid reorder threshold value.");
       return;
     }
 
@@ -288,15 +331,12 @@ useEffect(() => {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(
+        const errorMessage =
           data.message ||
-            (isEditing ? "Failed to update inventory item." : "Failed to add inventory item.")
-        );
-        showMessage(
-          data.message ||
-            (isEditing ? "Failed to update inventory item." : "Failed to add inventory item."),
-          "error"
-        );
+          (isEditing ? "Failed to update inventory item." : "Failed to add inventory item.");
+        alert(errorMessage);
+        showMessage(errorMessage, "error");
+        addSystemLog("ERROR", errorMessage);
         return;
       }
 
@@ -308,20 +348,29 @@ useEffect(() => {
         "success"
       );
 
-      resetItemForm();
-      await fetchInventory();
-    } catch (error) {
-      alert(isEditing ? "Server error while updating item." : "Server error while adding item.");
-      showMessage(
-        isEditing ? "Server error while updating item." : "Server error while adding item.",
-        "error"
+      addSystemLog(
+        "INFO",
+        isEditing
+          ? `Inventory item updated: ${trimmedItemName}.`
+          : `Inventory item added: ${trimmedItemName}.`
       );
+
+      resetItemForm();
+      await Promise.all([fetchHealthStatus(), fetchInventory()]);
+    } catch (error) {
+      const errorMessage = isEditing
+        ? "Server error while updating item."
+        : "Server error while adding item.";
+      alert(errorMessage);
+      showMessage(errorMessage, "error");
+      addSystemLog("ERROR", errorMessage);
     }
   };
 
   const handleExportReport = () => {
     if (!usageLogs || usageLogs.length === 0) {
       showMessage("No usage report data available to export.", "error");
+      addSystemLog("WARN", "Export blocked because no usage report data was available.");
       return;
     }
 
@@ -360,6 +409,10 @@ useEffect(() => {
       `Report exported successfully. ${usageLogs.length} record(s) exported.`,
       "success"
     );
+    addSystemLog(
+      "INFO",
+      `Usage report exported successfully with ${usageLogs.length} record(s).`
+    );
   };
 
   const lowStockItems = useMemo(() => {
@@ -378,15 +431,17 @@ useEffect(() => {
     };
   }, [inventory]);
 
-  const immediateRestockItems = inventory.filter(
-    (item) => getRestockRecommendation(item) === "Immediate"
-  );
+  const immediateRestockItems = useMemo(() => {
+    return inventory.filter((item) => getRestockRecommendation(item) === "Immediate");
+  }, [inventory]);
 
-  const reorderSoonItems = inventory.filter(
-    (item) => getRestockRecommendation(item) === "Reorder Soon"
-  );
+  const reorderSoonItems = useMemo(() => {
+    return inventory.filter((item) => getRestockRecommendation(item) === "Reorder Soon");
+  }, [inventory]);
 
-  const monitorItems = inventory.filter((item) => getRestockRecommendation(item) === "Monitor");
+  const monitorItems = useMemo(() => {
+    return inventory.filter((item) => getRestockRecommendation(item) === "Monitor");
+  }, [inventory]);
 
   const totalItems = inventory.length;
 
@@ -436,6 +491,218 @@ useEffect(() => {
           <div className="stat-card">
             <p className="stat-title">High Risk Items</p>
             <h3>{highRiskItems.length}</h3>
+          </div>
+        </section>
+
+        <InventoryRiskLayout
+          inventory={inventory}
+          loading={loading}
+          backendConnected={backendConnected}
+          fetchInventory={fetchInventory}
+        />
+
+        <InventoryDashboardLayout
+          inventory={inventory}
+          loading={loading}
+          backendConnected={backendConnected}
+        />
+
+        <UserAccountManagementLayout />
+        <SystemConfigurationLayout />
+        <SystemSettings />
+
+        <ExportReport inventory={inventory} />
+
+        <div className="report-dashboard-section">
+          <ReportDashboard />
+        </div>
+
+        <section className="panel glass-panel classification-panel">
+          <div className="panel-header">
+            <h2>Items by Risk Category</h2>
+            <span className="panel-tag">Classification</span>
+          </div>
+
+          <div className="category-container">
+            <div className="risk-category">
+              <h3 className="category-title high-risk-title">
+                🔴 High Risk Items ({itemsByRiskLevel.High.length})
+              </h3>
+              {itemsByRiskLevel.High.length === 0 ? (
+                <p className="empty-category">No high risk items</p>
+              ) : (
+                <div className="items-list">
+                  {itemsByRiskLevel.High.map((item) => (
+                    <div className="category-item high-risk-item" key={item._id}>
+                      <div className="item-info">
+                        <h4 className="high-risk-item-title">
+                          <span className="critical-icon">⚠️</span>
+                          <span>{item.itemName}</span>
+                        </h4>
+                        <p>
+                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                          <strong>{item.totalUsed}</strong>
+                        </p>
+                      </div>
+                      <span className="category-label high-label">High</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="risk-category">
+              <h3 className="category-title medium-risk-title">
+                🟡 Medium Risk Items ({itemsByRiskLevel.Medium.length})
+              </h3>
+              {itemsByRiskLevel.Medium.length === 0 ? (
+                <p className="empty-category">No medium risk items</p>
+              ) : (
+                <div className="items-list">
+                  {itemsByRiskLevel.Medium.map((item) => (
+                    <div className="category-item medium-risk-item" key={item._id}>
+                      <div className="item-info">
+                        <h4>{item.itemName}</h4>
+                        <p>
+                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                          <strong>{item.totalUsed}</strong>
+                        </p>
+                      </div>
+                      <span className="category-label medium-label">Medium</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="risk-category">
+              <h3 className="category-title low-risk-title">
+                🟢 Low Risk Items ({itemsByRiskLevel.Low.length})
+              </h3>
+              {itemsByRiskLevel.Low.length === 0 ? (
+                <p className="empty-category">No low risk items</p>
+              ) : (
+                <div className="items-list">
+                  {itemsByRiskLevel.Low.map((item) => (
+                    <div className="category-item low-risk-item" key={item._id}>
+                      <div className="item-info">
+                        <h4>{item.itemName}</h4>
+                        <p>
+                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                          <strong>{item.totalUsed}</strong>
+                        </p>
+                      </div>
+                      <span className="category-label low-label">Low</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="panel glass-panel classification-panel">
+          <div className="panel-header">
+            <h2>Restocking Recommendations</h2>
+            <span className="panel-tag">Priorities</span>
+          </div>
+
+          <div className="category-container">
+            <div className="risk-category">
+              <h3 className="category-title high-risk-title">
+                🚨 Immediate ({immediateRestockItems.length})
+              </h3>
+              {immediateRestockItems.length === 0 ? (
+                <p className="empty-category">No immediate restocking items</p>
+              ) : (
+                <div className="items-list">
+                  {immediateRestockItems.map((item) => (
+                    <div className="category-item high-risk-item" key={item._id}>
+                      <div className="item-info">
+                        <h4>{item.itemName}</h4>
+                        <p>
+                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                          <strong>{item.totalUsed}</strong>
+                        </p>
+                      </div>
+                      <span
+                        className={`category-label ${getRestockRecommendationClass(
+                          getRestockRecommendation(item)
+                        )}-label`}
+                      >
+                        {getRestockRecommendation(item)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="risk-category">
+              <h3 className="category-title medium-risk-title">
+                ⏳ Reorder Soon ({reorderSoonItems.length})
+              </h3>
+              {reorderSoonItems.length === 0 ? (
+                <p className="empty-category">No reorder soon items</p>
+              ) : (
+                <div className="items-list">
+                  {reorderSoonItems.map((item) => (
+                    <div className="category-item medium-risk-item" key={item._id}>
+                      <div className="item-info">
+                        <h4>{item.itemName}</h4>
+                        <p>
+                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                          <strong>{item.totalUsed}</strong>
+                        </p>
+                      </div>
+                      <span
+                        className={`category-label ${getRestockRecommendationClass(
+                          getRestockRecommendation(item)
+                        )}-label`}
+                      >
+                        {getRestockRecommendation(item)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="risk-category">
+              <h3 className="category-title low-risk-title">
+                👀 Monitor ({monitorItems.length})
+              </h3>
+              {monitorItems.length === 0 ? (
+                <p className="empty-category">No monitor items</p>
+              ) : (
+                <div className="items-list">
+                  {monitorItems.map((item) => (
+                    <div className="category-item low-risk-item" key={item._id}>
+                      <div className="item-info">
+                        <h4>{item.itemName}</h4>
+                        <p>
+                          Stock: <strong>{item.currentStock}</strong> | Threshold:{" "}
+                          <strong>{item.reorderThreshold}</strong> | Used:{" "}
+                          <strong>{item.totalUsed}</strong>
+                        </p>
+                      </div>
+                      <span
+                        className={`category-label ${getRestockRecommendationClass(
+                          getRestockRecommendation(item)
+                        )}-label`}
+                      >
+                        {getRestockRecommendation(item)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
@@ -560,9 +827,9 @@ useEffect(() => {
           </div>
         </section>
 
-        <ConfirmationBanner 
-          message={message} 
-          type={messageType} 
+        <ConfirmationBanner
+          message={message}
+          type={messageType}
           onClose={clearMessage}
           autoCloseDuration={messageType === "success" ? 4000 : 5000}
         />
@@ -611,30 +878,95 @@ useEffect(() => {
 
           <div className="panel glass-panel">
             <div className="panel-header">
-              <h2>System Status</h2>
-              <span className="panel-tag">Backend Sync</span>
+              <h2>Database Settings</h2>
+              <span className="panel-tag">MongoDB</span>
             </div>
 
-            <div className="empty-state">
-              <h3>
-                {loading
-                  ? "Loading..."
-                  : backendConnected
-                  ? "Backend Connected"
-                  : "Backend Not Connected"}
-              </h3>
-              <p>
-                {backendConnected
-                  ? "Inventory is synchronized with MongoDB."
-                  : "Backend server is not reachable."}
-              </p>
-              <p>
-                <strong>Server Port:</strong> {SERVER_PORT}
-              </p>
-              <p>
-                <strong>API Base URL:</strong> {API_BASE_URL}
-              </p>
+            <div className="database-status-overview">
+              <div className="database-status-card">
+                <span className="database-status-title">MongoDB Status</span>
+                <span
+                  className={`database-status-badge ${
+                    databaseConnected ? "connected" : "disconnected"
+                  }`}
+                >
+                  {databaseConnected ? "Connected" : "Disconnected"}
+                </span>
+                <p className="database-status-subtext">{databaseStateLabel}</p>
+              </div>
+
+              <div className="database-status-card">
+                <span className="database-status-title">Backend Status</span>
+                <span
+                  className={`database-status-badge ${
+                    backendConnected ? "connected" : "disconnected"
+                  }`}
+                >
+                  {backendConnected ? "Available" : "Unavailable"}
+                </span>
+                <p className="database-status-subtext">API service health</p>
+              </div>
             </div>
+
+            <div className="database-settings-box">
+              <div className="database-setting-row">
+                <span className="database-setting-label">MongoDB URI</span>
+                <code className="database-setting-value">{databaseUri}</code>
+              </div>
+
+              <div className="database-setting-row">
+                <span className="database-setting-label">Connection State</span>
+                <span className="database-state-text">{databaseStateLabel}</span>
+              </div>
+
+              <div className="database-setting-row">
+                <span className="database-setting-label">Server Port</span>
+                <span className="database-state-text">{SERVER_PORT}</span>
+              </div>
+
+              <div className="database-setting-row">
+                <span className="database-setting-label">API Base URL</span>
+                <code className="database-setting-value">{API_BASE_URL}</code>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="table-panel">
+          <div className="panel-header">
+            <h2>System Activity Log</h2>
+            <span className="panel-tag">Monitoring</span>
+          </div>
+
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Level</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody>
+                {systemActivityLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan="3">No system activity logged yet.</td>
+                  </tr>
+                ) : (
+                  systemActivityLogs.map((log) => (
+                    <tr key={log.id}>
+                      <td>{log.timestamp}</td>
+                      <td>
+                        <span className={`risk-badge ${getLogLevelClass(log.level)}`}>
+                          {log.level}
+                        </span>
+                      </td>
+                      <td>{log.message}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </section>
 
