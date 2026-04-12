@@ -2,6 +2,9 @@ import { useEffect, useState, useMemo } from "react";
 import "./App.css";
 import ConfirmationBanner from "./ConfirmationBanner";
 import Report from "./Report";
+import ReportGenerationLayout from "./ReportGenerationLayout";
+import UserAccountManagementLayout from "./UserAccountManagementLayout";
+import SystemStatusMonitoringLayout from "./SystemStatusMonitoringLayout";
 
 function App() {
   const API_BASE_URL = "http://localhost:5000";
@@ -445,6 +448,10 @@ useEffect(() => {
           totalItems={totalItems}
           totalUnitsRemaining={totalUnitsRemaining}
         />
+
+        <ReportGenerationLayout />
+        <UserAccountManagementLayout />
+        <SystemStatusMonitoringLayout />
 
         <section className="content-grid">
           <div className="panel glass-panel">
