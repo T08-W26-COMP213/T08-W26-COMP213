@@ -469,6 +469,19 @@ const API_URL = `${API_BASE_URL}/api/inventory`;
     doc.save(`inventory-report-${reportDate}.pdf`);
   };
 
+  // Calculate log statistics
+  const logStats = useMemo(() => {
+    const totalLogs = usageLogs.length;
+    const warnings = lowStockItems.length; // Items below reorder threshold
+    const errors = highRiskItems.length;   // Items at high risk
+    
+    return {
+      totalLogs,
+      warnings,
+      errors
+    };
+  }, [usageLogs, lowStockItems, highRiskItems]);
+
   return (
     <div className="app-shell">
       <nav className="topbar">
@@ -617,10 +630,10 @@ const API_URL = `${API_BASE_URL}/api/inventory`;
         </section>
 
         <ConfirmationBanner 
-          message={message} 
-          type={messageType} 
-          onClose={clearMessage}
-          autoCloseDuration={messageType === "success" ? 4000 : 5000}
+          message={addItemMessage} 
+          type={addItemMessageType} 
+          onClose={clearAddItemMessage}
+          autoCloseDuration={addItemMessageType === "success" ? 4000 : 5000}
         />
 
         <section className="content-grid">
@@ -682,6 +695,32 @@ const API_URL = `${API_BASE_URL}/api/inventory`;
                   ? "Inventory is synchronized with MongoDB."
                   : "Backend server is not reachable."}
               </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="content-grid">
+          <div className="panel glass-panel">
+            <div className="panel-header">
+              <h2>Log Statistics</h2>
+              <span className="panel-tag">Summary</span>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", padding: "20px" }}>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontSize: "14px", color: "#666", marginBottom: "10px" }}>Total Logs</p>
+                <h3 style={{ fontSize: "32px", margin: "0", color: "#173B8F" }}>{logStats.totalLogs}</h3>
+              </div>
+              
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontSize: "14px", color: "#666", marginBottom: "10px" }}>Warnings</p>
+                <h3 style={{ fontSize: "32px", margin: "0", color: "#FF9800" }}>{logStats.warnings}</h3>
+              </div>
+              
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontSize: "14px", color: "#666", marginBottom: "10px" }}>Errors</p>
+                <h3 style={{ fontSize: "32px", margin: "0", color: "#F44336" }}>{logStats.errors}</h3>
+              </div>
             </div>
           </div>
         </section>
