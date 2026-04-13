@@ -482,6 +482,54 @@ const API_URL = `${API_BASE_URL}/api/inventory`;
     };
   }, [usageLogs, lowStockItems, highRiskItems]);
 
+  // Generate priority-based recommendations
+  const recommendations = useMemo(() => {
+    const recs = [];
+
+    // Critical priority: High-risk items
+    highRiskItems.forEach((item) => {
+      recs.push({
+        priority: "critical",
+        title: `Urgent: ${item.itemName}`,
+        description: `This item is at HIGH RISK (${item.currentStock} units). Immediate action required.`,
+        action: "Reorder immediately",
+        color: "#F44336"
+      });
+    });
+
+    // High priority: Low stock items
+    lowStockItems.forEach((item) => {
+      if (!highRiskItems.find((h) => h._id === item._id)) {
+        recs.push({
+          priority: "high",
+          title: `Low Stock: ${item.itemName}`,
+          description: `Stock level (${item.currentStock}) below threshold (${item.reorderThreshold}).`,
+          action: "Place reorder",
+          color: "#FF9800"
+        });
+      }
+    });
+
+    // Medium priority: High usage items
+    const highUsageItems = inventory.filter(
+      (item) => item.totalUsed && item.totalUsed > 10 && item.riskLevel === "Low"
+    );
+    highUsageItems.slice(0, 3).forEach((item) => {
+      recs.push({
+        priority: "medium",
+        title: `Monitor: ${item.itemName}`,
+        description: `High usage detected (${item.totalUsed} units used). Stock: ${item.currentStock}.`,
+        action: "Increase monitoring",
+        color: "#FFC107"
+      });
+    });
+
+    return recs.sort((a, b) => {
+      const priorityOrder = { critical: 0, high: 1, medium: 2 };
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+  }, [inventory, highRiskItems, lowStockItems]);
+
   return (
     <div className="app-shell">
       <nav className="topbar">
@@ -722,6 +770,60 @@ const API_URL = `${API_BASE_URL}/api/inventory`;
                 <h3 style={{ fontSize: "32px", margin: "0", color: "#F44336" }}>{logStats.errors}</h3>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="content-grid">
+          <div className="panel glass-panel" style={{ gridColumn: "1 / -1" }}>
+            <div className="panel-header">
+              <h2>Recommendations</h2>
+              <span className="panel-tag">Action Items</span>
+            </div>
+
+            {recommendations.length === 0 ? (
+              <div className="empty-state">
+                <h3>All systems healthy</h3>
+                <p>No action items at this time. Continue monitoring inventory levels.</p>
+              </div>
+            ) : (
+              <div style={{ padding: "20px" }}>
+                {recommendations.map((rec, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      borderLeft: `4px solid ${rec.color}`,
+                      padding: "15px",
+                      marginBottom: "15px",
+                      backgroundColor: "rgba(0, 0, 0, 0.05)",
+                      borderRadius: "4px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ margin: "0 0 8px 0", color: rec.color }}>{rec.title}</h4>
+                      <p style={{ margin: "0 0 8px 0", color: "#666", fontSize: "14px" }}>
+                        {rec.description}
+                      </p>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "4px 12px",
+                          backgroundColor: rec.color,
+                          color: "white",
+                          borderRadius: "20px",
+                          fontSize: "12px",
+                          fontWeight: "bold"
+                        }}
+                      >
+                        {rec.action}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
