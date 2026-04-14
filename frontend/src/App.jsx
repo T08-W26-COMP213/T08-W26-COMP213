@@ -1,17 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
+import TrendAnalysis from "./TrendAnalysis";
 import InventoryRiskLayout from "./InventoryRiskLayout";
 import InventoryDashboardLayout from "./InventoryDashboardLayout";
 import ExportReport from "./ExportReport";
 import ReportDashboard from "./ReportDashboard";
+import ReportGenerationLayout from "./ReportGenerationLayout";
 import UserAccountManagementLayout from "./UserAccountManagementLayout";
 import ConfirmationBanner from "./ConfirmationBanner";
 import Report from "./Report";
-import ConsumptionTrendAnalysisLayout from "./ConsumptionTrendAnalysisLayout";
-import SystemStatusMonitoringLayout from "./SystemStatusMonitoringLayout";
-import SystemConfigurationLayout from "./SystemConfigurationLayout";
-import SystemSettings from "./SystemSettings";
-import ReportGenerationLayout from "./ReportGenerationLayout";
 
 function App() {
   const API_BASE_URL = "http://localhost:5000";
@@ -505,6 +502,7 @@ function App() {
           backendConnected={backendConnected}
           fetchInventory={fetchInventory}
         />
+        <TrendAnalysis inventory={inventory} usageLogs={usageLogs} />
 
         <InventoryDashboardLayout
           inventory={inventory}
@@ -513,8 +511,8 @@ function App() {
         />
 
         <UserAccountManagementLayout />
-        <SystemConfigurationLayout />
-        <SystemSettings />
+        {/* <SystemConfigurationLayout />
+        <SystemSettings /> */}
 
         <ExportReport inventory={inventory} />
 
@@ -723,9 +721,6 @@ function App() {
 
         <ReportGenerationLayout />
         <SystemStatusMonitoringLayout />
-        <ConsumptionTrendAnalysisLayout />
-        <SystemConfigurationLayout />
-        <SystemSettings />
 
         <section className="content-grid">
           <div className="panel glass-panel">
