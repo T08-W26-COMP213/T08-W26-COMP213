@@ -54,77 +54,38 @@ function ReportDashboard() {
   const [isExportingCSV, setIsExportingCSV] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
 
-  useEffect(() => {
-    const fetchReportData = async () => {
-      try {
-        setLoading(true);
-        setError("");
+useEffect(() => {
+  const fetchReportData = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        const [inventoryResponse, analyticsResponse] = await Promise.all([
-          fetch(INVENTORY_SUMMARY_URL),
-          fetch(CONSUMPTION_ANALYTICS_URL)
-        ]);
+      const [inventoryResponse, analyticsResponse] = await Promise.all([
+        fetch(INVENTORY_SUMMARY_URL),
+        fetch(CONSUMPTION_ANALYTICS_URL)
+      ]);
 
-        if (!inventoryResponse.ok) {
-          throw new Error("Failed to fetch inventory summary.");
-        }
-
-        if (!analyticsResponse.ok) {
-          throw new Error("Failed to fetch consumption analytics.");
-        }
-
-        const inventoryData = await inventoryResponse.json();
-        const analyticsData = await analyticsResponse.json();
-
-        setInventorySummary(Array.isArray(inventoryData) ? inventoryData : []);
-        setConsumptionAnalytics(Array.isArray(analyticsData) ? analyticsData : []);
-      } catch (err) {
-        setError(err.message || "Something went wrong while loading reports.");
-      } finally {
-        setLoading(false);
-  const mockData = {
-    totalItems: 5,
-    totalStockRemaining: 200,
-    lowStockItems: 2,
-    highRiskItems: 1,
-    totalUnitsUsed: 120,
-    itemDetails: [
-      {
-        itemName: "Gloves",
-        currentStock: 20,
-        reorderThreshold: 30,
-        totalUsed: 50,
-        riskLevel: "Medium"
-      },
-      {
-        itemName: "Masks",
-        currentStock: 80,
-        reorderThreshold: 40,
-        totalUsed: 30,
-        riskLevel: "Low"
-      },
-      {
-        itemName: "Sanitizer",
-        currentStock: 10,
-        reorderThreshold: 25,
-        totalUsed: 70,
-        riskLevel: "High"
+      if (!inventoryResponse.ok) {
+        throw new Error("Failed to fetch inventory summary.");
       }
-    ],
-    riskDistribution: [
-      { name: "High", value: 1 },
-      { name: "Medium", value: 1 },
-      { name: "Low", value: 1 }
-    ],
-    usageTrends: [
-      { name: "Gloves", totalUsed: 50 },
-      { name: "Masks", totalUsed: 30 },
-      { name: "Sanitizer", totalUsed: 70 }
-    ]
+
+      if (!analyticsResponse.ok) {
+        throw new Error("Failed to fetch consumption analytics.");
+      }
+
+      const inventoryData = await inventoryResponse.json();
+      const analyticsData = await analyticsResponse.json();
+
+      setInventorySummary(Array.isArray(inventoryData) ? inventoryData : []);
+      setConsumptionAnalytics(Array.isArray(analyticsData) ? analyticsData : []);
+    } catch (err) {
+      setError(err.message || "Something went wrong while loading reports.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  setReportData(mockData);
-  setLoading(false);
+  fetchReportData();
 }, []);
 
   const itemOptions = useMemo(() => {
@@ -457,9 +418,6 @@ function ReportDashboard() {
   if (error) {
     return <div className="report-message error">{error}</div>;
   }
-if (!reportData) {
-  return <div className="report-message">Loading data...</div>;
-}
   return (
     <div className="report-dashboard">
       <div className="report-heading-row report-heading-row-enhanced">
