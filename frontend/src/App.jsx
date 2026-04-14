@@ -7,6 +7,11 @@ import ReportDashboard from "./ReportDashboard";
 import UserAccountManagementLayout from "./UserAccountManagementLayout";
 import ConfirmationBanner from "./ConfirmationBanner";
 import Report from "./Report";
+import ConsumptionTrendAnalysisLayout from "./ConsumptionTrendAnalysisLayout";
+import SystemStatusMonitoringLayout from "./SystemStatusMonitoringLayout";
+import SystemConfigurationLayout from "./SystemConfigurationLayout";
+import SystemSettings from "./SystemSettings";
+import ReportGenerationLayout from "./ReportGenerationLayout";
 
 function App() {
   const API_BASE_URL = "http://localhost:5000";
@@ -717,8 +722,10 @@ function App() {
         />
 
         <ReportGenerationLayout />
-        <UserAccountManagementLayout />
         <SystemStatusMonitoringLayout />
+        <ConsumptionTrendAnalysisLayout />
+        <SystemConfigurationLayout />
+        <SystemSettings />
 
         <section className="content-grid">
           <div className="panel glass-panel">
