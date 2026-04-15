@@ -27,15 +27,15 @@
 }
 
 .confirmation-banner.success {
-  background: linear-gradient(135deg, rgba(236, 253, 245, 0.96), rgba(209, 250, 229, 0.96));
-  border-color: rgba(52, 211, 153, 0.35);
-  color: #065f46;
+  background: linear-gradient(135deg, rgba(220, 255, 250, 0.97), rgba(180, 255, 245, 0.94));
+  border-color: var(--risk-safe-soft-border, rgba(0, 200, 180, 0.45));
+  color: var(--risk-positive-ui-text, #004842);
 }
 
 .confirmation-banner.error {
-  background: linear-gradient(135deg, rgba(254, 242, 242, 0.96), rgba(254, 226, 226, 0.96));
-  border-color: rgba(248, 113, 113, 0.3);
-  color: #991b1b;
+  background: linear-gradient(135deg, rgba(255, 235, 244, 0.97), rgba(255, 210, 225, 0.94));
+  border-color: var(--risk-critical-soft-border, rgba(255, 0, 90, 0.4));
+  color: var(--risk-negative-ui-text, #7a0028);
 }
 
 .banner-content {
@@ -59,11 +59,11 @@
 }
 
 .confirmation-banner.success .banner-icon {
-  background: linear-gradient(135deg, #bbf7d0, #86efac);
+  background: linear-gradient(135deg, #b8fff5, #00e5c8);
 }
 
 .confirmation-banner.error .banner-icon {
-  background: linear-gradient(135deg, #fecaca, #fca5a5);
+  background: linear-gradient(135deg, #ffd6e8, #ff5c96);
 }
 
 .banner-icon svg {
@@ -129,11 +129,11 @@
 }
 
 .confirmation-banner.success::before {
-  background: linear-gradient(180deg, #10b981, #22c55e);
+  background: linear-gradient(180deg, var(--risk-safe-to, #00ffd0), var(--risk-safe-from, #007a6e));
 }
 
 .confirmation-banner.error::before {
-  background: linear-gradient(180deg, #ef4444, #f87171);
+  background: linear-gradient(180deg, var(--risk-critical-to, #ff7eb3), var(--risk-critical-from, #d1004b));
 }
 
 /* animation */

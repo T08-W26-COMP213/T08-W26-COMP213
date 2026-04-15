@@ -19,10 +19,10 @@
 }
 
 .risk-settings-panel .panel-header h2 {
-  font-size: 2.2rem;
+  font-size: var(--font-size-panel);
   font-weight: 800;
   color: #1e3a8a;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   margin: 0;
 }
 
@@ -82,11 +82,11 @@
 }
 
 .risk-preview-card.high {
-  border-left: 6px solid #ef4444;
+  border-left: 6px solid var(--risk-critical-from, #d1004b);
 }
 
 .risk-preview-card.medium {
-  border-left: 6px solid #f59e0b;
+  border-left: 6px solid var(--risk-warn-from, #ff9100);
 }
 
 .risk-preview-label {
@@ -100,7 +100,7 @@
 }
 
 .risk-preview-card strong {
-  font-size: 1.7rem;
+  font-size: 1.25rem;
   line-height: 1.2;
   color: #1e293b;
 }
@@ -142,11 +142,11 @@
 }
 
 .high-slider {
-  background: linear-gradient(90deg, #fecaca, #ef4444);
+  background: linear-gradient(90deg, #ffd0e0, var(--risk-critical-from, #d1004b));
 }
 
 .medium-slider {
-  background: linear-gradient(90deg, #fde68a, #f59e0b);
+  background: linear-gradient(90deg, #fff4c2, var(--risk-warn-from, #ff9100));
 }
 
 .risk-slider::-webkit-slider-thumb {
@@ -176,7 +176,7 @@
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: rgba(255, 255, 255, 0.92);
   color: #1e293b;
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 700;
   text-align: left;
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -271,11 +271,11 @@
   }
 
   .risk-settings-panel .panel-header h2 {
-    font-size: 1.8rem;
+    font-size: 1.125rem;
   }
 
   .risk-preview-card strong {
-    font-size: 1.35rem;
+    font-size: 1.125rem;
   }
 }
 
@@ -294,7 +294,7 @@
   }
 
   .risk-input-group input[type="number"] {
-    font-size: 1.2rem;
+    font-size: 1.0625rem;
     height: 52px;
   }
 }

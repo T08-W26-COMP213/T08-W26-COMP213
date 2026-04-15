@@ -7,18 +7,79 @@ function InventoryRiskLayout({
   fetchInventory
 }) {
   const [filterOption, setFilterOption] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortDirection, setSortDirection] = useState("asc");
 
   const safeItems = inventory.filter((item) => item.riskLevel === "Low");
   const atRiskItems = inventory.filter((item) => item.riskLevel === "Medium");
   const criticalItems = inventory.filter((item) => item.riskLevel === "High");
 
-  const riskChartData = [
-    { label: "Safe", count: safeItems.length, className: "safe" },
-    { label: "At Risk", count: atRiskItems.length, className: "at-risk" },
-    { label: "Critical", count: criticalItems.length, className: "critical" }
+  const sectionConfigs = [
+    {
+      key: "critical",
+      riskLevel: "High",
+      title: "Critical (High Risk)",
+      items: criticalItems,
+      emptyText: "No critical items right now.",
+      className: "risk-status-card critical-section"
+    },
+    {
+      key: "atRisk",
+      riskLevel: "Medium",
+      title: "At Risk (Medium Risk)",
+      items: atRiskItems,
+      emptyText: "No at-risk items right now.",
+      className: "risk-status-card at-risk-section"
+    },
+    {
+      key: "safe",
+      riskLevel: "Low",
+      title: "Safe (Low Risk)",
+      items: safeItems,
+      emptyText: "No safe items right now.",
+      className: "risk-status-card safe-section"
+    }
   ];
 
-  const maxRiskCount = Math.max(...riskChartData.map((item) => item.count), 1);
+  const displayedSections = (() => {
+    const filtered = sectionConfigs.filter((section) => (
+      filterOption === "all" || filterOption === section.key
+    ));
+
+    if (sortBy !== "risk") return filtered;
+
+    const rank = { Low: 1, Medium: 2, High: 3 };
+    return [...filtered].sort((a, b) => {
+      const left = rank[a.riskLevel] ?? 0;
+      const right = rank[b.riskLevel] ?? 0;
+      if (left < right) return sortDirection === "asc" ? -1 : 1;
+      if (left > right) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  })();
+
+  const sortItems = (items) => {
+    const riskRank = { High: 3, Medium: 2, Low: 1 };
+    return [...items].sort((a, b) => {
+      let left;
+      let right;
+
+      if (sortBy === "stock") {
+        left = Number(a.currentStock) || 0;
+        right = Number(b.currentStock) || 0;
+      } else if (sortBy === "risk") {
+        left = riskRank[a.riskLevel] ?? 0;
+        right = riskRank[b.riskLevel] ?? 0;
+      } else {
+        left = (a.itemName || "").toLowerCase();
+        right = (b.itemName || "").toLowerCase();
+      }
+
+      if (left < right) return sortDirection === "asc" ? -1 : 1;
+      if (left > right) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
 
   const renderItems = (items, emptyText) => {
     if (items.length === 0) {
@@ -30,26 +91,43 @@ function InventoryRiskLayout({
         {items.map((item) => (
           <div key={item._id} className="risk-item">
             <div className="risk-item-left">
-              {item.riskLevel === "High" && <span className="critical-icon">⚠️</span>}
-              <span className="risk-item-name">{item.itemName}</span>
+          {item.riskLevel === "High" && <span className="critical-icon" title="Needs immediate action">!</span>}
+          <span className="risk-item-name">{item.itemName}</span>
             </div>
-            <span className="risk-stock">Stock: {item.currentStock}</span>
+            <span className="risk-stock">
+              Stock: {item.currentStock} · Threshold: {item.reorderThreshold}
+            </span>
           </div>
         ))}
       </div>
     );
   };
 
+  const filterSubtitle = (() => {
+    if (filterOption === "all") return "Inventory Risk Alerts";
+    if (filterOption === "critical") return "Risk Alerts — Critical Only";
+    if (filterOption === "atRisk") return "Risk Alerts — At Risk Only";
+    return "Risk Alerts — Safe Only";
+  })();
+
+  const filterFootnote = (() => {
+    if (filterOption === "critical") {
+      return "Only critical items are shown. “!” marks items that need immediate attention.";
+    }
+    if (filterOption === "atRisk") return "Showing at-risk items only.";
+    if (filterOption === "safe") return "Showing safe items only.";
+    return null;
+  })();
+
   return (
     <section className="panel glass-panel risk-layout-panel">
 <div className="panel-header risk-header">
-  <h2>Inventory Risk Alerts</h2>
+  <h2>{filterSubtitle}</h2>
 
   <div className="panel-header-actions">
     <button className="refresh-btn" onClick={fetchInventory}>
       🔄 Refresh
     </button>
-    <span className="panel-tag warning-tag">Operational Staff</span>
   </div>
 </div>
 
@@ -67,32 +145,23 @@ function InventoryRiskLayout({
             <option value="atRisk">At Risk Only</option>
             <option value="critical">Critical Only</option>
           </select>
-        </div>
-      )}
-
-      {backendConnected && !loading && inventory.length > 0 && (
-        <div className="risk-chart-panel">
-          <div className="risk-chart-header">
-            <h3>Risk Level Overview</h3>
-            <span className="risk-chart-subtitle">Simple Bar Chart</span>
-          </div>
-
-          <div className="risk-chart">
-            {riskChartData.map((item) => (
-              <div className="risk-chart-row" key={item.label}>
-                <div className="risk-chart-label">{item.label}</div>
-
-                <div className="risk-chart-track">
-                  <div
-                    className={`risk-chart-fill ${item.className}`}
-                    style={{ width: `${(item.count / maxRiskCount) * 100}%` }}
-                  ></div>
-                </div>
-
-                <div className="risk-chart-count">{item.count}</div>
-              </div>
-            ))}
-          </div>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="risk-filter-select"
+          >
+            <option value="name">Sort by Name</option>
+            <option value="stock">Sort by Stock Count</option>
+            <option value="risk">Sort by Risk</option>
+          </select>
+          <select
+            value={sortDirection}
+            onChange={(e) => setSortDirection(e.target.value)}
+            className="risk-filter-select"
+          >
+            <option value="asc">Top to Bottom (Asc)</option>
+            <option value="desc">Bottom to Top (Desc)</option>
+          </select>
         </div>
       )}
 
@@ -113,36 +182,22 @@ function InventoryRiskLayout({
         </div>
       ) : (
         <div className="risk-grid">
-          {(filterOption === "all" || filterOption === "safe") && (
-            <div className="risk-status-card safe-section">
+          {displayedSections.map((section) => (
+            <div key={section.key} className={section.className}>
               <div className="risk-status-header">
-                <h3>Safe</h3>
-                <span className="risk-count">{safeItems.length}</span>
+                <h3>{section.title}</h3>
+                <span className="risk-count">{section.items.length}</span>
               </div>
-              {renderItems(safeItems, "No safe items right now.")}
+              {renderItems(sortItems(section.items), section.emptyText)}
             </div>
-          )}
-
-          {(filterOption === "all" || filterOption === "atRisk") && (
-            <div className="risk-status-card at-risk-section">
-              <div className="risk-status-header">
-                <h3>At Risk</h3>
-                <span className="risk-count">{atRiskItems.length}</span>
-              </div>
-              {renderItems(atRiskItems, "No at-risk items right now.")}
-            </div>
-          )}
-
-          {(filterOption === "all" || filterOption === "critical") && (
-            <div className="risk-status-card critical-section">
-              <div className="risk-status-header">
-                <h3>Critical</h3>
-                <span className="risk-count">{criticalItems.length}</span>
-              </div>
-              {renderItems(criticalItems, "No critical items right now.")}
-            </div>
-          )}
+          ))}
         </div>
+      )}
+
+      {filterFootnote && (
+        <p className="risk-filter-hint" role="note">
+          {filterFootnote}
+        </p>
       )}
     </section>
   );

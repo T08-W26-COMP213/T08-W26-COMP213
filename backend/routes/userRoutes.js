@@ -72,6 +72,7 @@ router.post("/", async (req, res) => {
     const newUser = new User({
       username: username.trim(),
       email: email.trim().toLowerCase(),
+      password: req.body.password || "stockguard123",
       role,
       status
     });
