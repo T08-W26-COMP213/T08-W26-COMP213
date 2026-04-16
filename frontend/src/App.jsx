@@ -835,13 +835,7 @@ function App() {
       if (left > right) return usageSortDirection === "asc" ? 1 : -1;
       return 0;
     });
-        <InventoryRiskLayout
-          inventory={inventory}
-          loading={loading}
-          backendConnected={backendConnected}
-          fetchInventory={fetchInventory}
-        />
-        <TrendAnalysis inventory={inventory} usageLogs={usageLogs} />
+       
 
     return sorted;
   }, [usageLogs, usageRiskFilter, usageTimelineFilter, usageSortBy, usageSortDirection, getTimelineCutoffYmd, logUsageYmdForFilter]);
@@ -854,9 +848,6 @@ function App() {
       return "Unknown";
     }
   })();
-        <UserAccountManagementLayout />
-        {/* <SystemConfigurationLayout />
-        <SystemSettings /> */}
 
   if (!user) return <Login onLogin={handleLogin} />;
 

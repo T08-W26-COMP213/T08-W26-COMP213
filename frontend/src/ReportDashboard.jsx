@@ -45,64 +45,68 @@ function ReportDashboard() {
   const [isExportingCSV, setIsExportingCSV] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
 
-  useEffect(() => {
-    const fetchReportData = async () => {
-      try {
-        const response = await fetch(API_URL);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch report data");
+useEffect(() => {
+  const fetchReportData = async () => {
+    const mockData = {
+      totalItems: 5,
+      totalStockRemaining: 200,
+      lowStockItems: 2,
+      highRiskItems: 1,
+      totalUnitsUsed: 120,
+      itemDetails: [
+        {
+          itemName: "Gloves",
+          currentStock: 20,
+          reorderThreshold: 30,
+          totalUsed: 50,
+          riskLevel: "Medium"
+        },
+        {
+          itemName: "Masks",
+          currentStock: 80,
+          reorderThreshold: 40,
+          totalUsed: 30,
+          riskLevel: "Low"
+        },
+        {
+          itemName: "Sanitizer",
+          currentStock: 10,
+          reorderThreshold: 25,
+          totalUsed: 70,
+          riskLevel: "High"
         }
+      ],
+      riskDistribution: [
+        { name: "High", value: 1 },
+        { name: "Medium", value: 1 },
+        { name: "Low", value: 1 }
+      ],
+      usageTrends: [
+        { name: "Gloves", totalUsed: 50 },
+        { name: "Masks", totalUsed: 30 },
+        { name: "Sanitizer", totalUsed: 70 }
+      ]
+    };
 
-        const data = await response.json();
-        setReportData(data);
-      } catch (err) {
-        setError(err.message || "Something went wrong while loading reports.");
-      } finally {
-        setLoading(false);
-  const mockData = {
-    totalItems: 5,
-    totalStockRemaining: 200,
-    lowStockItems: 2,
-    highRiskItems: 1,
-    totalUnitsUsed: 120,
-    itemDetails: [
-      {
-        itemName: "Gloves",
-        currentStock: 20,
-        reorderThreshold: 30,
-        totalUsed: 50,
-        riskLevel: "Medium"
-      },
-      {
-        itemName: "Masks",
-        currentStock: 80,
-        reorderThreshold: 40,
-        totalUsed: 30,
-        riskLevel: "Low"
-      },
-      {
-        itemName: "Sanitizer",
-        currentStock: 10,
-        reorderThreshold: 25,
-        totalUsed: 70,
-        riskLevel: "High"
+    try {
+      const response = await fetch(API_URL);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch report data");
       }
-    ],
-    riskDistribution: [
-      { name: "High", value: 1 },
-      { name: "Medium", value: 1 },
-      { name: "Low", value: 1 }
-    ],
-    usageTrends: [
-      { name: "Gloves", totalUsed: 50 },
-      { name: "Masks", totalUsed: 30 },
-      { name: "Sanitizer", totalUsed: 70 }
-    ]
+
+      const data = await response.json();
+      setReportData(data);
+      setError("");
+    } catch (err) {
+      setError(err.message || "Something went wrong while loading reports.");
+      setReportData(mockData);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  setReportData(mockData);
-  setLoading(false);
+  fetchReportData();
 }, []);
 
   const getDisplayRiskName = (riskLevel) => {
