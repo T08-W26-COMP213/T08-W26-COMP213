@@ -1,0 +1,855 @@
+/* Applied when System Configuration → Dark Mode is saved (class on <html>) */
+html.stockguard-theme-dark {
+  color-scheme: dark;
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark body {
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 32%),
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 28%),
+    linear-gradient(180deg, #0f172a 0%, #1e293b 45%, #0f172a 100%);
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .app-layout {
+  background: #0f172a;
+}
+
+html.stockguard-theme-dark .main-content {
+  background: transparent;
+}
+
+html.stockguard-theme-dark .main-header {
+  background: rgba(30, 41, 59, 0.92);
+  border-bottom-color: rgba(71, 85, 105, 0.55);
+}
+
+html.stockguard-theme-dark .main-header h1 {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .main-header-meta {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .page-content {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .panel,
+html.stockguard-theme-dark .table-panel {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: rgba(71, 85, 105, 0.45);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+html.stockguard-theme-dark .panel-header h2 {
+  color: #93c5fd;
+}
+
+html.stockguard-theme-dark .panel-tag {
+  background: rgba(37, 99, 235, 0.25);
+  color: #bfdbfe;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+html.stockguard-theme-dark .stat-card {
+  background: rgba(30, 41, 59, 0.88);
+  border-color: rgba(71, 85, 105, 0.5);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+}
+
+html.stockguard-theme-dark .stat-title {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .stat-card h3 {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .hero-panel {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(30, 41, 59, 0.95));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+html.stockguard-theme-dark .empty-state,
+html.stockguard-theme-dark .empty-state h3 {
+  color: #cbd5e1;
+}
+
+html.stockguard-theme-dark .risk-category {
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(71, 85, 105, 0.4);
+}
+
+html.stockguard-theme-dark .category-item {
+  background: rgba(30, 41, 59, 0.65);
+}
+
+html.stockguard-theme-dark .usage-form label {
+  color: #cbd5e1;
+}
+
+html.stockguard-theme-dark .usage-form input,
+html.stockguard-theme-dark .usage-form select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+html.stockguard-theme-dark .usage-inline-form {
+  background: rgba(15, 23, 42, 0.5);
+  border-color: #64748b;
+}
+
+html.stockguard-theme-dark .usage-readonly-stock {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+html.stockguard-theme-dark .confirmation-wire-box {
+  background: #0f172a;
+  border-color: #64748b;
+}
+
+html.stockguard-theme-dark .confirmation-wire-title {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .confirmation-wire-body {
+  color: #cbd5e1;
+}
+
+html.stockguard-theme-dark .form-overlay {
+  background: rgba(2, 6, 23, 0.72);
+}
+
+html.stockguard-theme-dark .form-modal {
+  background: #1e293b;
+  color: #e2e8f0;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+}
+
+html.stockguard-theme-dark .form-modal-drag-handle:active {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+html.stockguard-theme-dark .form-modal .panel-header h2 {
+  color: #93c5fd;
+}
+
+/* Tables: base App.css sets tbody td to #334155 — must override for dark surfaces */
+html.stockguard-theme-dark .page-content table tbody td,
+html.stockguard-theme-dark .table-wrapper tbody td {
+  color: #e2e8f0;
+  border-bottom-color: rgba(71, 85, 105, 0.55);
+}
+
+html.stockguard-theme-dark .page-content table thead th,
+html.stockguard-theme-dark .table-wrapper thead th {
+  background: #0f172a;
+  color: #93c5fd;
+  border-bottom-color: #334155;
+}
+
+html.stockguard-theme-dark .page-content tbody tr:hover,
+html.stockguard-theme-dark .table-wrapper tbody tr:hover {
+  background: rgba(51, 65, 85, 0.65);
+}
+
+html.stockguard-theme-dark .page-content tbody tr:hover td,
+html.stockguard-theme-dark .table-wrapper tbody tr:hover td {
+  color: #f8fafc;
+}
+
+html.stockguard-theme-dark .table-wrapper table {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .table-wrapper tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+html.stockguard-theme-dark .table-wrapper tbody tr:nth-child(even) td {
+  color: #e2e8f0;
+}
+
+/* Dashboard summary / overview tables (not always inside .table-wrapper) */
+html.stockguard-theme-dark .dashboard-table-card table thead th,
+html.stockguard-theme-dark .dashboard-chart-card table thead th {
+  background: #0f172a;
+  color: #93c5fd;
+  border-bottom: 1px solid #334155;
+}
+
+html.stockguard-theme-dark .dashboard-table-card table tbody td,
+html.stockguard-theme-dark .dashboard-chart-card table tbody td {
+  color: #e2e8f0;
+  border-bottom-color: rgba(71, 85, 105, 0.55);
+}
+
+html.stockguard-theme-dark .dashboard-table-card tbody tr:hover,
+html.stockguard-theme-dark .dashboard-chart-card tbody tr:hover {
+  background: rgba(51, 65, 85, 0.55);
+}
+
+html.stockguard-theme-dark .dashboard-table-wrapper thead th {
+  background: #0f172a;
+  color: #93c5fd;
+  border-bottom-color: #334155;
+}
+
+html.stockguard-theme-dark .dashboard-table-wrapper tbody td {
+  color: #e2e8f0;
+  border-bottom-color: rgba(71, 85, 105, 0.55);
+}
+
+html.stockguard-theme-dark .dashboard-summary-card {
+  background: rgba(30, 41, 59, 0.88);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+html.stockguard-theme-dark .dashboard-summary-card > p:first-child {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .dashboard-summary-card h3 {
+  color: #f1f5f9;
+}
+
+html.stockguard-theme-dark .dashboard-bar-label,
+html.stockguard-theme-dark .dashboard-bar-value {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .dashboard-bar-track {
+  background: #334155;
+}
+
+html.stockguard-theme-dark .legend-pill {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+html.stockguard-theme-dark .legend-safe {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+html.stockguard-theme-dark .legend-at-risk {
+  background: #eab308;
+  color: #422006;
+}
+
+html.stockguard-theme-dark .legend-critical {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* Risk pills: standard green / amber / red (solid, no gradients) */
+html.stockguard-theme-dark .risk-badge {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  background-image: none;
+}
+
+html.stockguard-theme-dark .risk-badge.low {
+  background: #16a34a;
+  color: #ffffff;
+  border: 1px solid #15803d;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+html.stockguard-theme-dark .risk-badge.medium {
+  background: #eab308;
+  color: #422006;
+  border: 1px solid #ca8a04;
+  text-shadow: none;
+}
+
+html.stockguard-theme-dark .risk-badge.high {
+  background: #dc2626;
+  color: #ffffff;
+  border: 1px solid #b91c1c;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+html.stockguard-theme-dark .table-controls select {
+  background: linear-gradient(180deg, #1e293b, #0f172a);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .refresh-data-btn {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .refresh-data-btn:hover {
+  background: #334155;
+}
+
+html.stockguard-theme-dark .dashboard-table-card,
+html.stockguard-theme-dark .dashboard-chart-card {
+  background: rgba(30, 41, 59, 0.75);
+  border: 1px solid rgba(71, 85, 105, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+html.stockguard-theme-dark .dashboard-table-card h3,
+html.stockguard-theme-dark .dashboard-chart-card h3 {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .dashboard-layout-panel .panel-header h2 {
+  color: #93c5fd;
+}
+
+html.stockguard-theme-dark .report-container tbody td,
+html.stockguard-theme-dark .report-container thead th {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .report-container thead th {
+  background: #0f172a;
+  color: #93c5fd;
+}
+
+html.stockguard-theme-dark .database-status-card,
+html.stockguard-theme-dark .database-settings-box {
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(71, 85, 105, 0.4);
+}
+
+html.stockguard-theme-dark .database-status-title,
+html.stockguard-theme-dark .database-setting-label {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .database-status-subtext,
+html.stockguard-theme-dark .database-state-text {
+  color: #cbd5e1;
+}
+
+html.stockguard-theme-dark .risk-status-card {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+html.stockguard-theme-dark .risk-empty-state p,
+html.stockguard-theme-dark .risk-empty-text {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .risk-item {
+  background: rgba(15, 23, 42, 0.55);
+}
+
+html.stockguard-theme-dark .report-dashboard {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .report-title {
+  color: #f1f5f9;
+}
+
+html.stockguard-theme-dark .report-subtitle,
+html.stockguard-theme-dark .report-legend-label {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .report-card,
+html.stockguard-theme-dark .report-filter-card {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(71, 85, 105, 0.45);
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .report-filter-select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+html.stockguard-theme-dark .filter-title {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .filter-subtitle {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .system-config-panel {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+html.stockguard-theme-dark .system-config-header h2 {
+  color: #93c5fd;
+}
+
+html.stockguard-theme-dark .system-config-subtext {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .system-config-card {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+html.stockguard-theme-dark .system-config-card h3,
+html.stockguard-theme-dark .system-config-card .dashboard-section-header h3 {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .system-config-card p,
+html.stockguard-theme-dark .system-config-card small {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .system-config-card label {
+  color: #cbd5e1;
+}
+
+html.stockguard-theme-dark .system-config-card input:not([type="checkbox"]):not([type="radio"]),
+html.stockguard-theme-dark .system-config-card select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+html.stockguard-theme-dark .system-config-capability-note {
+  color: #94a3b8;
+  border-color: rgba(71, 85, 105, 0.5);
+  background: rgba(15, 23, 42, 0.45);
+}
+
+html.stockguard-theme-dark .system-config-inline-hint {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .risk-settings-panel {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+html.stockguard-theme-dark .risk-settings-panel h2,
+html.stockguard-theme-dark .risk-settings-panel h3 {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .risk-settings-description,
+html.stockguard-theme-dark .risk-settings-panel label,
+html.stockguard-theme-dark .risk-settings-panel p {
+  color: #cbd5e1;
+}
+
+html.stockguard-theme-dark .risk-preview-card {
+  background: rgba(15, 23, 42, 0.65);
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+html.stockguard-theme-dark .risk-settings-panel input[type="range"] {
+  accent-color: #60a5fa;
+}
+
+html.stockguard-theme-dark .risk-settings-panel input:not([type="range"]) {
+  background: #0f172a;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+html.stockguard-theme-dark .user-management-panel {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: rgba(71, 85, 105, 0.45);
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .user-management-panel h2,
+html.stockguard-theme-dark .user-management-panel th {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .user-management-panel td {
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+html.stockguard-theme-dark .user-management-panel tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.35);
+}
+
+/* ========== Dark mode visibility: risk columns, classification, selects, users, reports ========== */
+
+html.stockguard-theme-dark select,
+html.stockguard-theme-dark .edit-inline-select {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+html.stockguard-theme-dark select option,
+html.stockguard-theme-dark select optgroup {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+html.stockguard-theme-dark select optgroup {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+html.stockguard-theme-dark .risk-filter-bar label {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .risk-filter-select {
+  background: #1e293b;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+html.stockguard-theme-dark .risk-chart-panel {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+html.stockguard-theme-dark .risk-chart-header h3 {
+  color: #93c5fd;
+}
+
+html.stockguard-theme-dark .risk-chart-subtitle,
+html.stockguard-theme-dark .risk-chart-label {
+  color: #cbd5e1;
+}
+
+html.stockguard-theme-dark .risk-chart-track {
+  background: #334155;
+}
+
+html.stockguard-theme-dark .risk-chart-fill.safe {
+  background: #16a34a;
+}
+
+html.stockguard-theme-dark .risk-chart-fill.at-risk {
+  background: #eab308;
+}
+
+html.stockguard-theme-dark .risk-chart-fill.critical {
+  background: #dc2626;
+}
+
+html.stockguard-theme-dark .risk-chart-count {
+  color: #e2e8f0;
+}
+
+/* Inventory Risk Alerts — readable headers & rows on dark cards */
+html.stockguard-theme-dark .critical-section .risk-status-header h3 {
+  color: #fca5a5;
+}
+
+html.stockguard-theme-dark .critical-section .risk-item {
+  color: #fecaca;
+}
+
+html.stockguard-theme-dark .at-risk-section .risk-status-header h3 {
+  color: #fde047;
+}
+
+html.stockguard-theme-dark .at-risk-section .risk-item {
+  color: #fef9c3;
+}
+
+html.stockguard-theme-dark .safe-section .risk-status-header h3 {
+  color: #86efac;
+}
+
+html.stockguard-theme-dark .safe-section .risk-item {
+  color: #bbf7d0;
+}
+
+html.stockguard-theme-dark .risk-status-header .risk-count {
+  color: #0f172a;
+  background: rgba(248, 250, 252, 0.95);
+}
+
+/* Items by Risk Category */
+html.stockguard-theme-dark .classification-panel .high-risk-title {
+  color: #f87171;
+}
+
+html.stockguard-theme-dark .classification-panel .medium-risk-title {
+  color: #facc15;
+}
+
+html.stockguard-theme-dark .classification-panel .low-risk-title {
+  color: #4ade80;
+}
+
+html.stockguard-theme-dark .classification-panel .item-info h4 {
+  color: #f8fafc;
+}
+
+html.stockguard-theme-dark .classification-panel .item-info p {
+  color: #cbd5e1;
+}
+
+html.stockguard-theme-dark .classification-panel .category-item {
+  background: rgba(30, 41, 59, 0.75);
+}
+
+html.stockguard-theme-dark .classification-panel .high-label {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+html.stockguard-theme-dark .classification-panel .medium-label {
+  background: #eab308;
+  color: #422006;
+}
+
+html.stockguard-theme-dark .classification-panel .low-label {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+html.stockguard-theme-dark .classification-panel .empty-category {
+  color: #94a3b8;
+}
+
+/* Risk distribution bar fills — solid green / amber / red */
+html.stockguard-theme-dark .dashboard-bar-fill.low {
+  background: #16a34a;
+  background-image: none;
+}
+
+html.stockguard-theme-dark .dashboard-bar-fill.medium {
+  background: #eab308;
+  background-image: none;
+}
+
+html.stockguard-theme-dark .dashboard-bar-fill.high {
+  background: #dc2626;
+  background-image: none;
+}
+
+/* Report metric cards */
+html.stockguard-theme-dark .report-card .card-label {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .report-card h3 {
+  color: #f8fafc;
+}
+
+html.stockguard-theme-dark .report-card--tone-safe::before {
+  background: #16a34a;
+}
+
+html.stockguard-theme-dark .report-card--tone-at-risk::before {
+  background: #eab308;
+}
+
+html.stockguard-theme-dark .report-card--tone-critical::before {
+  background: #dc2626;
+}
+
+html.stockguard-theme-dark .report-card--accent-blue::before {
+  background: #3b82f6;
+}
+
+html.stockguard-theme-dark .report-card--accent-slate::before {
+  background: #64748b;
+}
+
+html.stockguard-theme-dark .selected-item-card {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+/* Chart “islands” + stock health */
+html.stockguard-theme-dark .chart-wrapper,
+html.stockguard-theme-dark .stock-health-card {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+html.stockguard-theme-dark .chart-header h3 {
+  color: #f1f5f9;
+}
+
+html.stockguard-theme-dark .chart-header p {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .stock-health-stat,
+html.stockguard-theme-dark .stock-summary-box {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(71, 85, 105, 0.4);
+}
+
+html.stockguard-theme-dark .stock-health-stat span,
+html.stockguard-theme-dark .stock-summary-box span {
+  color: #94a3b8;
+}
+
+html.stockguard-theme-dark .stock-health-stat strong,
+html.stockguard-theme-dark .stock-summary-box strong {
+  color: #f8fafc;
+}
+
+html.stockguard-theme-dark .stock-health-bar-labels {
+  color: #cbd5e1;
+}
+
+html.stockguard-theme-dark .stock-health-bar-track {
+  background: #334155;
+}
+
+/* Recharts: inline tick fill is #475569 — too dark on dark charts */
+html.stockguard-theme-dark .recharts-cartesian-axis-tick text {
+  fill: #cbd5e1 !important;
+}
+
+html.stockguard-theme-dark .recharts-cartesian-grid line {
+  stroke: #475569;
+}
+
+html.stockguard-theme-dark .recharts-legend-item-text {
+  color: #e2e8f0 !important;
+}
+
+/* Add User */
+html.stockguard-theme-dark .add-user-panel {
+  background: rgba(30, 41, 59, 0.88);
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+html.stockguard-theme-dark .add-user-panel .panel-header h2 {
+  color: #f1f5f9;
+}
+
+html.stockguard-theme-dark .add-user-grid label {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .add-user-grid input,
+html.stockguard-theme-dark .add-user-grid select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+html.stockguard-theme-dark .add-user-grid input:focus,
+html.stockguard-theme-dark .add-user-grid select:focus {
+  background: #1e293b;
+}
+
+html.stockguard-theme-dark .add-user-panel .panel-tag {
+  background: rgba(37, 99, 235, 0.25);
+  color: #bfdbfe;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: none;
+}
+
+/* User Accounts table card */
+html.stockguard-theme-dark .user-table-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+}
+
+html.stockguard-theme-dark .user-table-card .dashboard-section-header h3 {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .user-management-panel .dashboard-table-wrapper thead th {
+  background: #0f172a;
+  color: #93c5fd;
+}
+
+html.stockguard-theme-dark .user-management-panel .dashboard-table-wrapper tbody td {
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .user-management-panel .panel-tag {
+  background: rgba(37, 99, 235, 0.25);
+  color: #bfdbfe;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: none;
+}
+
+html.stockguard-theme-dark .status-active {
+  background: rgba(22, 163, 74, 0.28);
+  color: #bbf7d0;
+}
+
+html.stockguard-theme-dark .status-inactive {
+  background: rgba(220, 38, 38, 0.22);
+  color: #fecaca;
+}
+
+/* Inventory table: stronger header contrast */
+html.stockguard-theme-dark .table-panel thead th {
+  color: #bfdbfe;
+}
+
+/* Remaining dark-mode visibility fixes */
+html.stockguard-theme-dark .table-controls select option,
+html.stockguard-theme-dark .risk-filter-select option,
+html.stockguard-theme-dark .add-user-grid select option,
+html.stockguard-theme-dark .edit-inline-select option {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+html.stockguard-theme-dark .alert-item {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+html.stockguard-theme-dark .alert-item h4 {
+  color: #bfdbfe;
+}
+
+html.stockguard-theme-dark .alert-item p {
+  color: #cbd5e1;
+}
+
+html.stockguard-theme-dark .warning-tag {
+  background: rgba(234, 179, 8, 0.2);
+  color: #fef08a;
+  border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+html.stockguard-theme-dark .database-setting-row {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(71, 85, 105, 0.45);
+}
+
+html.stockguard-theme-dark .database-setting-value {
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #475569;
+}
+
+html.stockguard-theme-dark .chart-card {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(71, 85, 105, 0.45);
+  color: #e2e8f0;
+}
+
+html.stockguard-theme-dark .chart-header h3,
+html.stockguard-theme-dark .chart-header p {
+  color: #f8fafc;
+}
+
+html.stockguard-theme-dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #0f172a !important;
+  border-color: #475569 !important;
+}
+
+html.stockguard-theme-dark .recharts-tooltip-wrapper .recharts-tooltip-label,
+html.stockguard-theme-dark .recharts-tooltip-wrapper .recharts-tooltip-item {
+  color: #f8fafc !important;
+}

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
@@ -14,10 +15,15 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true
     },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6
+    },
     role: {
       type: String,
       required: true,
-      enum: ["System Administrator", "Operational Staff", "Business Owner"],
+      enum: ["System Administrator", "Operational Staff", "Business Owner", "Stock Analyst"],
       default: "Operational Staff"
     },
     status: {
@@ -31,5 +37,15 @@ const userSchema = new mongoose.Schema(
     timestamps: true
   }
 );
+
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 module.exports = mongoose.model("User", userSchema);

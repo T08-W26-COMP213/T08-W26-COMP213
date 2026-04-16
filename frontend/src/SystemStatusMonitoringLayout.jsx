@@ -1,87 +1,237 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import "./SystemSettings.css";
 
-function SystemStatusMonitoringLayout() {
+function SystemSettings() {
+  const [settings, setSettings] = useState({
+    highRiskPercentage: 50,
+    mediumRiskPercentage: 100
+  });
+
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const API_BASE_URL =
+    import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/system-settings`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch settings");
+      }
+
+      setSettings({
+        highRiskPercentage: data?.riskSettings?.highRiskPercentage ?? 50,
+        mediumRiskPercentage: data?.riskSettings?.mediumRiskPercentage ?? 100
+      });
+    } catch (error) {
+      setMessage("Failed to load settings");
+      setMessageType("error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setSettings((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+
+    if (message) {
+      setMessage("");
+      setMessageType("");
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+
+    const high = Number(settings.highRiskPercentage);
+    const medium = Number(settings.mediumRiskPercentage);
+
+    if (!high || !medium) {
+      setMessage("Please enter both percentage values.");
+      setMessageType("error");
+      return;
+    }
+
+    if (high <= 0 || medium <= 0) {
+      setMessage("Percentages must be greater than 0.");
+      setMessageType("error");
+      return;
+    }
+
+    if (high >= medium) {
+      setMessage("High risk percentage must be less than medium risk percentage.");
+      setMessageType("error");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      const response = await fetch(`${API_BASE_URL}/api/system-settings`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          riskSettings: {
+            highRiskPercentage: high,
+            mediumRiskPercentage: medium
+          }
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to save settings");
+      }
+
+      setMessage("Settings saved successfully");
+      setMessageType("success");
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 900);
+    } catch (error) {
+      setMessage(error.message || "Failed to save settings");
+      setMessageType("error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const highPreview = `${settings.highRiskPercentage || 0}%`;
+  const mediumPreview = `${settings.mediumRiskPercentage || 0}%`;
+
+  if (loading) {
+    return (
+      <section className="panel glass-panel risk-settings-panel">
+        <div className="panel-header">
+          <h2>⚙️ Risk Threshold Settings</h2>
+          <span className="panel-tag">Loading</span>
+        </div>
+        <p className="risk-settings-loading">Loading settings...</p>
+      </section>
+    );
+  }
+
   return (
-    <section className="panel glass-panel system-status-panel">
+    <section className="panel glass-panel risk-settings-panel">
       <div className="panel-header">
-        <h2>System Status Monitoring</h2>
-        <span className="panel-tag">Monitoring</span>
+        <h2>⚙️ Risk Threshold Settings</h2>
+        <span className="panel-tag">Admin Control</span>
       </div>
 
-      <div className="status-grid">
-        <div className="status-card">
-          <div className="dashboard-section-header">
-            <h3>Server Status</h3>
-          </div>
-          <p className="status-label online">Online</p>
-          <p>Backend server is running normally.</p>
+      <p className="risk-settings-description">
+        Configure how the system classifies inventory risk levels based on the
+        percentage of each item’s reorder threshold.
+      </p>
+
+      <div className="risk-settings-preview">
+        <div className="risk-preview-card high">
+          <span className="risk-preview-label">High Risk Rule</span>
+          <strong>Stock ≤ {highPreview} of threshold</strong>
         </div>
 
-        <div className="status-card">
-          <div className="dashboard-section-header">
-            <h3>Database Status</h3>
-          </div>
-          <p className="status-label online">Connected</p>
-          <p>Database connection is healthy.</p>
-        </div>
-
-        <div className="status-card">
-          <div className="dashboard-section-header">
-            <h3>API Health</h3>
-          </div>
-          <p className="status-label warning">Stable</p>
-          <p>All API endpoints are responding.</p>
-        </div>
-
-        <div className="status-card">
-          <div className="dashboard-section-header">
-            <h3>Last Sync</h3>
-          </div>
-          <p className="status-label neutral">2 mins ago</p>
-          <p>Latest inventory data synchronization completed.</p>
+        <div className="risk-preview-card medium">
+          <span className="risk-preview-label">Medium Risk Rule</span>
+          <strong>Stock ≤ {mediumPreview} of threshold</strong>
         </div>
       </div>
 
-      <div className="status-table-card">
-        <div className="dashboard-section-header">
-          <h3>Recent System Events</h3>
+      <form onSubmit={handleSave} className="risk-settings-form">
+        <div className="risk-settings-grid">
+          <div className="risk-input-group">
+            <label htmlFor="highRiskPercentage">High Risk Percentage (%)</label>
+
+            <input
+              type="range"
+              id="highRiskPercentageRange"
+              name="highRiskPercentage"
+              min="1"
+              max="100"
+              value={settings.highRiskPercentage}
+              onChange={handleChange}
+              className="risk-slider high-slider"
+            />
+
+            <input
+              type="number"
+              id="highRiskPercentage"
+              name="highRiskPercentage"
+              min="1"
+              max="100"
+              value={settings.highRiskPercentage}
+              onChange={handleChange}
+              placeholder="Enter high risk percentage"
+            />
+
+            <small>
+              Items at or below this percentage of the reorder threshold become
+              high risk.
+            </small>
+          </div>
+
+          <div className="risk-input-group">
+            <label htmlFor="mediumRiskPercentage">Medium Risk Percentage (%)</label>
+
+            <input
+              type="range"
+              id="mediumRiskPercentageRange"
+              name="mediumRiskPercentage"
+              min="1"
+              max="200"
+              value={settings.mediumRiskPercentage}
+              onChange={handleChange}
+              className="risk-slider medium-slider"
+            />
+
+            <input
+              type="number"
+              id="mediumRiskPercentage"
+              name="mediumRiskPercentage"
+              min="1"
+              max="200"
+              value={settings.mediumRiskPercentage}
+              onChange={handleChange}
+              placeholder="Enter medium risk percentage"
+            />
+
+            <small>
+              Items at or below this percentage of the reorder threshold become
+              medium risk.
+            </small>
+          </div>
         </div>
 
-        <div className="dashboard-table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Component</th>
-                <th>Status</th>
-                <th>Message</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>10:15 AM</td>
-                <td>Backend</td>
-                <td>Online</td>
-                <td>Server running normally</td>
-              </tr>
-              <tr>
-                <td>10:10 AM</td>
-                <td>Database</td>
-                <td>Connected</td>
-                <td>Connection successful</td>
-              </tr>
-              <tr>
-                <td>10:05 AM</td>
-                <td>API</td>
-                <td>Stable</td>
-                <td>All routes responding</td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="risk-settings-actions">
+          <button type="submit" className="save-settings-button" disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save Settings"}
+          </button>
         </div>
-      </div>
+
+        {message && (
+          <div className={`risk-settings-message ${messageType}`}>
+            {messageType === "success" ? "✅" : "⚠️"} {message}
+          </div>
+        )}
+      </form>
     </section>
   );
 }
 
-export default SystemStatusMonitoringLayout;
+export default SystemSettings;

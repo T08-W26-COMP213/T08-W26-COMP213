@@ -147,6 +147,35 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid item ID" });
+    }
+
+    const item = await Inventory.findById(id);
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    await UsageLog.deleteMany({ itemId: item._id });
+    await Inventory.deleteOne({ _id: item._id });
+
+    res.json({
+      message: "Inventory item deleted successfully",
+      itemId: item._id
+    });
+  } catch (error) {
+    console.error("Delete item error:", error);
+    res.status(400).json({
+      message: "Failed to delete inventory item",
+      error: error.message
+    });
+  }
+});
+
 router.get("/logs", async (req, res) => {
   try {
     const logs = await UsageLog.find().sort({ createdAt: -1 });
@@ -188,6 +217,15 @@ router.post("/usage", async (req, res) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedUsageDate)) {
       return res.status(400).json({
         message: "Usage date must be in YYYY-MM-DD format"
+      });
+    }
+
+    const todayLocalISO = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+      .toISOString()
+      .split("T")[0];
+    if (normalizedUsageDate > todayLocalISO) {
+      return res.status(400).json({
+        message: "Usage date cannot be in the future"
       });
     }
 

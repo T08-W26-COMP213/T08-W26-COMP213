@@ -23,29 +23,8 @@ function SystemConfigurationLayout() {
     refreshInterval: 15
   };
 
-  const defaultHealth = {
-    server: {
-      status: "unknown",
-      port: "-"
-    },
-    api: {
-      status: "unknown",
-      message: "Checking API status..."
-    },
-    database: {
-      connected: false,
-      readyState: 0,
-      stateLabel: "unknown",
-      displayUri: "Not available"
-    },
-    timestamp: null,
-    uptime: 0
-  };
-
   const [settings, setSettings] = useState(defaultSettings);
   const [initialSettings, setInitialSettings] = useState(defaultSettings);
-  const [health, setHealth] = useState(defaultHealth);
-  const [healthLoading, setHealthLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -111,6 +90,24 @@ function SystemConfigurationLayout() {
     );
   }, [settings]);
 
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    setSettings((prev) => ({
+      ...prev,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : type === "number"
+          ? value === ""
+            ? ""
+            : Number(value)
+          : value
+    }));
+
+    if (message) clearMessage();
+  };
+
   const parseApiResponse = async (response) => {
     const contentType = response.headers.get("content-type") || "";
     const rawText = await response.text();
@@ -130,133 +127,14 @@ function SystemConfigurationLayout() {
     }
   };
 
-  const formatUptime = (seconds) => {
-    const totalSeconds = Number(seconds || 0);
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-
-    if (days > 0) return `${days}d ${hours}h`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    if (minutes > 0) return `${minutes}m ${secs}s`;
-    return `${secs}s`;
-  };
-
-  const formatTimestamp = (timestamp) => {
-    if (!timestamp) return "Not available";
-
-    try {
-      return new Date(timestamp).toLocaleString();
-    } catch {
-      return "Invalid date";
-    }
-  };
-
-  const getHealthBadgeClass = (status) => {
-    const value = String(status || "").toLowerCase();
-
-    if (value === "online" || value === "healthy" || value === "connected") {
-      return "healthy";
-    }
-
-    if (value === "connecting" || value === "warning") {
-      return "warning";
-    }
-
-    return "offline";
-  };
-
-  const getHealthDotClass = (status) => {
-    const value = String(status || "").toLowerCase();
-
-    if (value === "online" || value === "healthy" || value === "connected") {
-      return "healthy";
-    }
-
-    if (value === "connecting" || value === "warning") {
-      return "warning";
-    }
-
-    return "offline";
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    setSettings((prev) => ({
-      ...prev,
-      [name]:
-        type === "checkbox"
-          ? checked
-          : type === "number"
-          ? value === ""
-            ? ""
-            : Number(value)
-          : value
-    }));
-
-    if (message) clearMessage();
-  };
-
-  const fetchSystemHealth = useCallback(async () => {
-    try {
-      setHealthLoading(true);
-
-      const response = await fetch(`${API_BASE_URL}/api/health`);
-      const data = await parseApiResponse(response);
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch system health.");
-      }
-
-      setHealth({
-        server: {
-          status: data?.server?.status || "unknown",
-          port: data?.server?.port || "-"
-        },
-        api: {
-          status: data?.api?.status || "unknown",
-          message: data?.api?.message || "API status unavailable"
-        },
-        database: {
-          connected: Boolean(data?.database?.connected),
-          readyState: data?.database?.readyState ?? 0,
-          stateLabel: data?.database?.stateLabel || "unknown",
-          displayUri: data?.database?.displayUri || "Not available"
-        },
-        timestamp: data?.timestamp || null,
-        uptime: data?.server?.uptime || 0
-      });
-    } catch (error) {
-      setHealth({
-        server: {
-          status: "offline",
-          port: "-"
-        },
-        api: {
-          status: "offline",
-          message: error.message || "API is not reachable"
-        },
-        database: {
-          connected: false,
-          readyState: 0,
-          stateLabel: "disconnected",
-          displayUri: "Not available"
-        },
-        timestamp: new Date().toISOString(),
-        uptime: 0
-      });
-    } finally {
-      setHealthLoading(false);
-    }
-  }, [API_BASE_URL]);
-
   const fetchSystemSettings = useCallback(async () => {
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_BASE_URL}/api/system-settings`);
+      const url = `${API_BASE_URL}/api/system-settings`;
+      console.log("Fetching system settings from:", url);
+
+      const response = await fetch(url);
       const data = await parseApiResponse(response);
 
       if (!response.ok) {
@@ -278,16 +156,7 @@ function SystemConfigurationLayout() {
 
   useEffect(() => {
     fetchSystemSettings();
-    fetchSystemHealth();
-  }, [fetchSystemSettings, fetchSystemHealth]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchSystemHealth();
-    }, 15000);
-
-    return () => clearInterval(interval);
-  }, [fetchSystemHealth]);
+  }, [fetchSystemSettings]);
 
   const handleSaveSettings = async (e) => {
     e.preventDefault();
@@ -309,8 +178,12 @@ function SystemConfigurationLayout() {
       setSaving(true);
 
       const payload = normalizeSettings(settings);
+      const url = `${API_BASE_URL}/api/system-settings`;
 
-      const response = await fetch(`${API_BASE_URL}/api/system-settings`, {
+      console.log("Saving system settings to:", url);
+      console.log("Payload:", payload);
+
+      const response = await fetch(url, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"
@@ -328,6 +201,7 @@ function SystemConfigurationLayout() {
       setSettings(savedSettings);
       setInitialSettings(savedSettings);
       showMessage("System settings updated successfully.", "success");
+      window.dispatchEvent(new CustomEvent("stockguard-system-settings-changed"));
     } catch (error) {
       showMessage(error.message || "Failed to save settings.", "error");
     } finally {
@@ -364,108 +238,6 @@ function SystemConfigurationLayout() {
         onClose={clearMessage}
         autoCloseDuration={messageType === "success" ? 3000 : 4500}
       />
-
-      <div className="system-health-section">
-        <div className="system-health-topbar">
-          <div className="system-health-heading">
-            <div className="system-health-icon-wrap">🩺</div>
-            <div>
-              <span className="section-eyebrow">System Monitoring</span>
-              <h3>System Health Indicators</h3>
-              <p>Live operational status for backend services and infrastructure.</p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="health-refresh-btn"
-            onClick={fetchSystemHealth}
-            disabled={healthLoading}
-          >
-            {healthLoading ? "Refreshing..." : "Refresh Status"}
-          </button>
-        </div>
-
-        {healthLoading ? (
-          <div className="empty-state compact-health-state">
-            <h3>Checking system health...</h3>
-            <p>Please wait while StockGuard verifies service availability.</p>
-          </div>
-        ) : (
-          <div className="modern-health-grid">
-            <div className="modern-health-card">
-              <div className="modern-health-row">
-                <span className="modern-health-label">Backend Server</span>
-                <span className={`live-dot ${getHealthDotClass(health.server.status)}`}></span>
-              </div>
-              <div className="modern-health-main">
-                <span className={`health-badge ${getHealthBadgeClass(health.server.status)}`}>
-                  {health.server.status}
-                </span>
-              </div>
-              <small className="modern-health-meta">Core application runtime</small>
-            </div>
-
-            <div className="modern-health-card">
-              <div className="modern-health-row">
-                <span className="modern-health-label">API Status</span>
-                <span className={`live-dot ${getHealthDotClass(health.api.status)}`}></span>
-              </div>
-              <div className="modern-health-main">
-                <span className={`health-badge ${getHealthBadgeClass(health.api.status)}`}>
-                  {health.api.status}
-                </span>
-              </div>
-              <small className="modern-health-meta">{health.api.message}</small>
-            </div>
-
-            <div className="modern-health-card">
-              <div className="modern-health-row">
-                <span className="modern-health-label">MongoDB</span>
-                <span
-                  className={`live-dot ${getHealthDotClass(health.database.stateLabel)}`}
-                ></span>
-              </div>
-              <div className="modern-health-main">
-                <span
-                  className={`health-badge ${getHealthBadgeClass(
-                    health.database.stateLabel
-                  )}`}
-                >
-                  {health.database.stateLabel}
-                </span>
-              </div>
-              <small className="modern-health-meta">Database connectivity state</small>
-            </div>
-
-            <div className="modern-health-card">
-              <div className="modern-health-row">
-                <span className="modern-health-label">Server Port</span>
-              </div>
-              <div className="modern-metric-value">{health.server.port}</div>
-              <small className="modern-health-meta">Listening network port</small>
-            </div>
-
-            <div className="modern-health-card">
-              <div className="modern-health-row">
-                <span className="modern-health-label">Uptime</span>
-              </div>
-              <div className="modern-metric-value">{formatUptime(health.uptime)}</div>
-              <small className="modern-health-meta">Current uninterrupted runtime</small>
-            </div>
-
-            <div className="modern-health-card">
-              <div className="modern-health-row">
-                <span className="modern-health-label">Last Checked</span>
-              </div>
-              <div className="modern-metric-value modern-metric-time">
-                {formatTimestamp(health.timestamp)}
-              </div>
-              <small className="modern-health-meta">Most recent health verification</small>
-            </div>
-          </div>
-        )}
-      </div>
 
       {loading ? (
         <div className="empty-state">
@@ -629,6 +401,12 @@ function SystemConfigurationLayout() {
                   <span className="slider"></span>
                 </span>
               </label>
+
+              <p className="system-config-capability-note">
+                These options are stored in the database as organization policy. This application does not send email or
+                SMS: there is no mail server integration yet. Low stock and critical items still appear in the
+                dashboard and reports regardless of these toggles.
+              </p>
             </div>
 
             <div className="system-config-card">
@@ -708,6 +486,7 @@ function SystemConfigurationLayout() {
                   <span className="slider"></span>
                 </span>
               </label>
+              <p className="system-config-inline-hint">Click Save Settings below to apply dark mode across the app.</p>
 
               <label>
                 Refresh Interval (seconds)

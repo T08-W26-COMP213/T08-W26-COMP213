@@ -113,9 +113,16 @@ function AddUserForm({ onUserAdded }) {
               required
             >
               <option value="">Choose role</option>
-              <option value="System Administrator">System Administrator</option>
-              <option value="Operational Staff">Operational Staff</option>
-              <option value="Business Owner">Business Owner</option>
+              <optgroup label="Technical Role">
+                <option value="System Administrator">System Administrator</option>
+              </optgroup>
+              <optgroup label="Operational Role">
+                <option value="Operational Staff">Operational Staff</option>
+              </optgroup>
+              <optgroup label="Strategic Role">
+                <option value="Business Owner">Business Owner</option>
+                <option value="Stock Analyst">Stock Analyst</option>
+              </optgroup>
             </select>
           </label>
         </div>

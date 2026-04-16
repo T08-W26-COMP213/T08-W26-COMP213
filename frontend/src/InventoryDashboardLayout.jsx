@@ -1,6 +1,6 @@
 import React from "react";
 
-function InventoryDashboardLayout({ inventory = [], loading, backendConnected }) {
+function InventoryDashboardLayout({ inventory = [], loading, onRefresh }) {
   const totalItems = inventory.length;
 
   const totalStock = inventory.reduce(
@@ -16,51 +16,77 @@ function InventoryDashboardLayout({ inventory = [], loading, backendConnected })
     (item) => item.riskLevel === "High"
   ).length;
 
+  const safeItems = inventory.filter((item) => item.riskLevel === "Low").length;
+
+  const getRiskLabel = (riskLevel) => {
+    if (riskLevel === "High") return "Critical";
+    if (riskLevel === "Medium") return "At Risk";
+    return "Safe";
+  };
+
+  const getRiskClass = (riskLevel) => {
+    if (riskLevel === "High") return "high";
+    if (riskLevel === "Medium") return "medium";
+    return "low";
+  };
+
+  const riskDistribution = [
+    { label: "Safe", count: safeItems, className: "safe" },
+    { label: "At Risk", count: atRiskItems, className: "at-risk" },
+    { label: "Critical", count: criticalItems, className: "critical" }
+  ];
+  const maxRiskCount = Math.max(...riskDistribution.map((r) => r.count), 1);
+
   return (
     <section className="panel glass-panel dashboard-layout-panel">
-      <div className="panel-header">
+      <div className="panel-header dashboard-panel-with-refresh">
         <h2>Inventory Summary Dashboard</h2>
-        <span className="panel-tag">Business Owner</span>
+        {typeof onRefresh === "function" && (
+          <button type="button" className="refresh-data-btn" onClick={onRefresh}>
+            Refresh Data
+          </button>
+        )}
       </div>
 
       <div className="dashboard-summary-grid">
         <div className="dashboard-summary-card">
-          <p>Total Inventory Items</p>
+          <p>Total Items</p>
           <h3>{totalItems}</h3>
         </div>
 
         <div className="dashboard-summary-card">
-          <p>Total Stock Count</p>
+          <p>Total Stock</p>
           <h3>{totalStock}</h3>
         </div>
 
         <div className="dashboard-summary-card">
-          <p>At Risk Items</p>
+          <p>At Risk</p>
           <h3>{atRiskItems}</h3>
         </div>
 
         <div className="dashboard-summary-card">
-          <p>Critical Items</p>
-          <h3>{criticalItems}</h3>
+          <p>Critical</p>
+          <h3>⚠️ {criticalItems}</h3>
         </div>
       </div>
 
       <div className="dashboard-table-card">
-        <h3>Inventory Table</h3>
+        <h3>Inventory Overview</h3>
 
         <table>
           <thead>
             <tr>
               <th>Item Name</th>
-              <th>Stock Level</th>
-              <th>Risk Status</th>
+              <th>Stock</th>
+              <th>Threshold</th>
+              <th>Risk</th>
             </tr>
           </thead>
 
           <tbody>
             {inventory.length === 0 ? (
               <tr>
-                <td colSpan="3">
+                <td colSpan="4">
                   {loading ? "Loading..." : "No inventory data"}
                 </td>
               </tr>
@@ -69,7 +95,13 @@ function InventoryDashboardLayout({ inventory = [], loading, backendConnected })
                 <tr key={item._id}>
                   <td>{item.itemName}</td>
                   <td>{item.currentStock}</td>
-                  <td>{item.riskLevel}</td>
+                  <td>{item.reorderThreshold}</td>
+                  <td>
+                    <span className={`risk-badge ${getRiskClass(item.riskLevel)}`}>
+                      {item.riskLevel === "High" ? "⚠️ " : ""}
+                      {getRiskLabel(item.riskLevel)}
+                    </span>
+                  </td>
                 </tr>
               ))
             )}
@@ -77,36 +109,33 @@ function InventoryDashboardLayout({ inventory = [], loading, backendConnected })
         </table>
       </div>
 
-    <div className="dashboard-chart-card">
-  <h3>Inventory Chart</h3>
+      <div className="dashboard-chart-card dashboard-chart-gap">
+        <h3>Risk Distribution</h3>
 
-  {inventory.length === 0 ? (
-    <p>{loading ? "Loading chart..." : "No inventory data available."}</p>
-  ) : (
-    <div className="dashboard-bar-chart">
-      {inventory.slice(0, 8).map((item) => {
-        const maxStock = Math.max(...inventory.map((i) => i.currentStock), 1);
-
-        return (
-          <div key={item._id} className="dashboard-bar-row">
-            <span className="dashboard-bar-label">{item.itemName}</span>
-
-            <div className="dashboard-bar-track">
-              <div
-                className="dashboard-bar-fill"
-                style={{
-                  width: `${(item.currentStock / maxStock) * 100}%`
-                }}
-              ></div>
+        {inventory.length === 0 ? (
+          <p>{loading ? "Loading chart..." : "No inventory data available."}</p>
+        ) : (
+          <div className="dashboard-bar-chart dashboard-risk-distribution">
+            <div className="dashboard-chart-legend">
+              <span className="legend-pill legend-safe">Safe</span>
+              <span className="legend-pill legend-at-risk">At Risk</span>
+              <span className="legend-pill legend-critical">Critical</span>
             </div>
-
-            <span className="dashboard-bar-value">{item.currentStock}</span>
+            {riskDistribution.map((row) => (
+              <div key={row.label} className="dashboard-bar-row">
+                <span className="dashboard-bar-label">{row.label}</span>
+                <div className="dashboard-bar-track">
+                  <div
+                    className={`dashboard-bar-fill risk-dist-${row.className}`}
+                    style={{ width: `${(row.count / maxRiskCount) * 100}%` }}
+                  />
+                </div>
+                <span className="dashboard-bar-value">{row.count}</span>
+              </div>
+            ))}
           </div>
-        );
-      })}
-    </div>
-  )}
-</div>
+        )}
+      </div>
     </section>
   );
 }
