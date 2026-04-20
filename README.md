@@ -37,12 +37,9 @@ Non-core features implemented:
 ## Documentation on GitHub
 
 - **This README** — quick orientation and **developer** setup (clone, install, run, test).
-- **[docs/USER_MANUAL.md](docs/USER_MANUAL.md)** — **end-user** guide (draft outline for Appendix C; add screenshots and steps).
-- **[docs/ADMIN_MANUAL.md](docs/ADMIN_MANUAL.md)** — **deployment and administration** (draft outline for your final report admin section).
+- **[USER_MANUAL.md](USER_MANUAL.md)** — **end-user** guide (draft outline for Appendix C; add screenshots and steps).
+- **[ADMIN_MANUAL.md](ADMIN_MANUAL.md)** — **deployment and administration** (draft outline for your final report admin section).
 
-Design documents and the formal **Word/PDF final report** (with appendices) usually follow your course template; you can paste or export from these `docs/` files when assembling Appendix A/C.
-
-**Optional on GitHub:** `LICENSE`, `CONTRIBUTING.md`, or `docs/REPORT.pdf` if your instructor asks for them.
 
 ## Backend Setup
 
@@ -108,8 +105,6 @@ Current automated tests cover key auth flows used in Release 1.0:
 - Error handling returns user-safe messages while preserving stable UI behavior.
 
 ## Demo Data Workflow (Release 1.0)
-
-Use demo data for presentation, then clear it before final release submission.
 
 ```bash
 cd backend
